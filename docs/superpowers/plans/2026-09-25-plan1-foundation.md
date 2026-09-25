@@ -378,7 +378,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - layout.htmlのフラグメント：`head(title)`、`header`、`flash`（`message` / `error` を表示）
   - CSSクラス：`input`、`btn-primary`、`btn-secondary`、`btn-danger`、`card`
 
-- [ ] **Step 1: Tailwindを導入する**
+- [x] **Step 1: Tailwindを導入する**
 
 `package.json`：
 
@@ -430,7 +430,7 @@ npm run build
 
 Expected: `src/main/resources/static/css/app.css` が生成される
 
-- [ ] **Step 2: テスト基盤を書く**
+- [x] **Step 2: テスト基盤を書く**
 
 `src/test/java/jp/bk/shiftmanager/TestData.java`：
 
@@ -524,7 +524,7 @@ public abstract class IntegrationTestBase {
 
 注：Spring Boot 4では `AutoConfigureMockMvc` のパッケージが `org.springframework.boot.webmvc.test.autoconfigure` に移動している。コンパイルエラーになる場合は `spring-boot-webmvc-test` のjar内で正しいパッケージを確認する。
 
-- [ ] **Step 3: 失敗するテストを書く**
+- [x] **Step 3: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/LoginTest.java`：
 
@@ -539,7 +539,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.servlet.http.Cookie;
@@ -554,7 +553,7 @@ class LoginTest extends IntegrationTestBase {
     void 未ログインでトップにアクセスするとログイン画面へリダイレクトされる() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
@@ -620,7 +619,7 @@ class LoginTest extends IntegrationTestBase {
         data.disable(taro);
         mvc.perform(get("/").cookie(rememberMe))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
+                .andExpect(redirectedUrl("/login"));
     }
 
     @Test
@@ -692,12 +691,12 @@ class InitialAdminRunnerTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 4: テストが失敗することを確認する**
+- [x] **Step 4: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest="LoginTest,InitialAdminRunnerTest"`
 Expected: FAIL（コンパイルエラー：`User`、`UserMapper`、`LoginUser`、`InitialAdminRunner` が存在しない）
 
-- [ ] **Step 5: エンティティ・Mapper・Repositoryを実装する**
+- [x] **Step 5: エンティティ・Mapper・Repositoryを実装する**
 
 `src/main/java/jp/bk/shiftmanager/entity/User.java`：
 
@@ -809,7 +808,7 @@ public class UserRepository {
 }
 ```
 
-- [ ] **Step 6: 認証まわりを実装する**
+- [x] **Step 6: 認証まわりを実装する**
 
 `src/main/java/jp/bk/shiftmanager/auth/LoginUser.java`：
 
@@ -1031,7 +1030,7 @@ public class HomeController {
 }
 ```
 
-- [ ] **Step 7: テンプレートを実装する**
+- [x] **Step 7: テンプレートを実装する**
 
 `src/main/resources/templates/layout.html`：
 
@@ -1116,12 +1115,12 @@ public class HomeController {
 </html>
 ```
 
-- [ ] **Step 8: テストが通ることを確認する**
+- [x] **Step 8: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest="LoginTest,InitialAdminRunnerTest"`
 Expected: PASS（LoginTest 10件、InitialAdminRunnerTest 2件）
 
-- [ ] **Step 9: 全テストを実行してコミットする**
+- [x] **Step 9: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -1133,7 +1132,7 @@ git commit -m "feat: ログイン・ログアウト・ログイン保持と初�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 10: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 10: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
