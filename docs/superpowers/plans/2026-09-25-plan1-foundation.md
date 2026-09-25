@@ -2967,7 +2967,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - `@Component` にしない。Beanにするとサーブレットフィルタとしても自動登録され、`OncePerRequestFilter` の仕組みでセキュリティフィルタチェーン内の実行が飛ばされるため。`SecurityConfig` で `new` して `RememberMeAuthenticationFilter` の直後に登録する（認可判定より前に権限を差し替えるため）
 - `LoginUser` に `CredentialsContainer` を実装しないこと（ログイン後にパスワードハッシュが消去され、照合できなくなる）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/auth/UserStateCheckFilterTest.java`：
 
@@ -3079,12 +3079,12 @@ class UserStateCheckFilterTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
 Expected: FAIL（5件。無効化・リセット・別端末の変更後もセッションが使えてしまい、権限の変更も反映されないため）
 
-- [ ] **Step 3: フィルタを実装する**
+- [x] **Step 3: フィルタを実装する**
 
 `src/main/java/jp/bk/shiftmanager/auth/UserStateCheckFilter.java`：
 
@@ -3158,7 +3158,7 @@ public class UserStateCheckFilter extends OncePerRequestFilter {
 }
 ```
 
-- [ ] **Step 4: SecurityConfigにフィルタを登録する**
+- [x] **Step 4: SecurityConfigにフィルタを登録する**
 
 `auth/SecurityConfig.java` の `securityFilterChain` に引数 `UserRepository userRepository` を追加し、`http` の設定の最後（`.rememberMe(...)` の後）に次を追加する（import `jp.bk.shiftmanager.repository.UserRepository`、`org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter`）：
 
@@ -3167,12 +3167,12 @@ public class UserStateCheckFilter extends OncePerRequestFilter {
                 .addFilterAfter(new UserStateCheckFilter(userRepository), RememberMeAuthenticationFilter.class);
 ```
 
-- [ ] **Step 5: テストが通ることを確認する**
+- [x] **Step 5: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
 Expected: PASS（5件）
 
-- [ ] **Step 6: 全テストを実行してコミットする**
+- [x] **Step 6: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS（既存テストは `data.login` でDBの最新状態から `LoginUser` を作っているため、フィルタの影響を受けない）
@@ -3184,7 +3184,7 @@ git commit -m "feat: 無効化・パスワードリセット・権限変更を�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 7: この計画ファイルのTask 6のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 7: この計画ファイルのTask 6のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
