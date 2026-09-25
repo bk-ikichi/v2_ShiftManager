@@ -3355,7 +3355,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `repository.AppSettingRepository#getDeadlineDaysBefore(): int`、`#updateDeadlineDaysBefore(int)`
   - `service.SettingService#getDeadlineDaysBefore(): int`（Plan 2のサイクル計算で使う）、`#updateDeadlineDaysBefore(String input)`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/SettingsTest.java`：
 
@@ -3423,12 +3423,12 @@ class SettingsTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=SettingsTest`
 Expected: FAIL（コンパイルエラー：`AppSettingMapper` が存在しない）
 
-- [ ] **Step 3: Mapper・Repository・Serviceを実装する**
+- [x] **Step 3: Mapper・Repository・Serviceを実装する**
 
 `src/main/java/jp/bk/shiftmanager/mapper/AppSettingMapper.java`：
 
@@ -3518,7 +3518,7 @@ public class SettingService {
 }
 ```
 
-- [ ] **Step 4: コントローラーとテンプレートを実装する**
+- [x] **Step 4: コントローラーとテンプレートを実装する**
 
 `src/main/java/jp/bk/shiftmanager/controller/SettingsController.java`：
 
@@ -3586,12 +3586,12 @@ public class SettingsController {
 </html>
 ```
 
-- [ ] **Step 5: テストが通ることを確認する**
+- [x] **Step 5: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=SettingsTest`
 Expected: PASS（4件）
 
-- [ ] **Step 6: 全テストを実行してコミットする**
+- [x] **Step 6: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -3603,7 +3603,7 @@ git commit -m "feat: 申請締切日数の設定
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 7: この計画ファイルのTask 8のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 7: この計画ファイルのTask 8のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
