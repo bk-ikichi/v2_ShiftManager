@@ -5,8 +5,9 @@ services:
       POSTGRES_DB: shiftmanager
       POSTGRES_USER: shiftmanager
       POSTGRES_PASSWORD: shiftmanager
+    # PCにインストール済みのPostgreSQLが5432を使っているため5433で公開する
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - dbdata:/var/lib/postgresql/data
 volumes:

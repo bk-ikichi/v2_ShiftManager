@@ -2,7 +2,7 @@ spring:
   application:
     name: shiftmanager
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/shiftmanager}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/shiftmanager}
     username: ${DATABASE_USERNAME:shiftmanager}
     password: ${DATABASE_PASSWORD:shiftmanager}
 
