@@ -1,5 +1,6 @@
 package jp.bk.shiftmanager.auth;
 
+import jp.bk.shiftmanager.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -22,7 +24,7 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, UserDetailsService userDetailsService,
-            @Value("${app.remember-me-key}") String rememberMeKey) throws Exception {
+            @Value("${app.remember-me-key}") String rememberMeKey, UserRepository userRepository) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/error", "/css/**", "/js/**", "/icons/**",
@@ -39,7 +41,9 @@ public class SecurityConfig {
                 .rememberMe(remember -> remember
                         .key(rememberMeKey)
                         .tokenValiditySeconds(REMEMBER_ME_SECONDS)
-                        .userDetailsService(userDetailsService));
+                        .userDetailsService(userDetailsService))
+                // 管理者による無効化・リセット・権限変更をログイン中のセッションにも反映する
+                .addFilterAfter(new UserStateCheckFilter(userRepository), RememberMeAuthenticationFilter.class);
         return http.build();
     }
 }
