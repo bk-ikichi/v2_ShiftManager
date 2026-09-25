@@ -3627,7 +3627,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `IntegrationTestBase`（Task 2）、layout.htmlの `head` フラグメント（Task 2）
 - Produces: Dockerイメージ（環境変数 `DATABASE_URL`、`DATABASE_USERNAME`、`DATABASE_PASSWORD`、`REMEMBER_ME_KEY` で動作）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/PwaTest.java`：
 
@@ -3659,12 +3659,12 @@ class PwaTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=PwaTest`
 Expected: FAIL（`/manifest.webmanifest` が404）
 
-- [ ] **Step 3: マニフェストとアイコンを作成し、layoutから参照する**
+- [x] **Step 3: マニフェストとアイコンを作成し、layoutから参照する**
 
 `src/main/resources/static/manifest.webmanifest`：
 
@@ -3705,12 +3705,12 @@ Expected: FAIL（`/manifest.webmanifest` が404）
   <meta name="theme-color" content="#b45309">
 ```
 
-- [ ] **Step 4: テストが通ることを確認する**
+- [x] **Step 4: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=PwaTest`
 Expected: PASS（2件）
 
-- [ ] **Step 5: プロキシ配下（Render等）向けの設定を追加する**
+- [x] **Step 5: プロキシ配下（Render等）向けの設定を追加する**
 
 `application.yml` の末尾に追加（HTTPS終端のリバースプロキシ配下でリダイレクト先をhttpsにするため）：
 
@@ -3719,7 +3719,7 @@ server:
   forward-headers-strategy: framework
 ```
 
-- [ ] **Step 6: DockerfileとDockerignoreを作成する**
+- [x] **Step 6: DockerfileとDockerignoreを作成する**
 
 `Dockerfile`：
 
@@ -3765,7 +3765,7 @@ docs/
 src/main/resources/static/css/app.css
 ```
 
-- [ ] **Step 7: イメージをビルドし、ローカルDBにつないで起動確認する**
+- [x] **Step 7: イメージをビルドし、ローカルDBにつないで起動確認する**
 
 ```bash
 docker build -t shiftmanager .
@@ -3790,7 +3790,7 @@ Expected: 1行目が `200`、2行目にTailwindのCSS（`/*! tailwindcss` で始
 docker stop shiftmanager-app
 ```
 
-- [ ] **Step 8: 全テストを実行してコミットする**
+- [x] **Step 8: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -3802,7 +3802,7 @@ git commit -m "feat: PWAマニフェストとDockerイメージ
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 9のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 9: この計画ファイルのTask 9のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
