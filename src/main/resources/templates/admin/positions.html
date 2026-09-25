@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('ポジション管理')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-3xl px-4 py-6">
+  <h1 class="mb-4 text-lg font-bold">ポジション管理</h1>
+  <div th:replace="~{layout :: flash}"></div>
+  <p class="mb-4 text-sm text-stone-600">表示順の小さいものから、転記画面・日別一覧の上に並びます。使用中のポジションは削除できないため、不要になったら非表示にしてください。</p>
+
+  <div class="card mb-6 space-y-3">
+    <div th:each="p : ${positions}" class="flex flex-wrap items-end gap-2 border-b border-stone-100 pb-3">
+      <form th:action="@{/admin/positions/{id}(id=${p.id})}" method="post" class="flex flex-wrap items-end gap-2">
+        <label class="block">
+          <span class="text-xs">名前</span>
+          <input name="name" th:value="${p.name}" maxlength="30" required class="input w-40">
+        </label>
+        <label class="block">
+          <span class="text-xs">表示順</span>
+          <input type="number" name="displayOrder" th:value="${p.displayOrder}" min="0" max="999" required class="input w-20">
+        </label>
+        <label class="flex items-center gap-1 pb-2 text-sm">
+          <input type="checkbox" name="hidden" value="true" th:checked="${p.hidden}">
+          <input type="hidden" name="_hidden" value="on">
+          非表示
+        </label>
+        <button class="btn-secondary">保存</button>
+      </form>
+      <form th:action="@{/admin/positions/{id}/delete(id=${p.id})}" method="post">
+        <button class="btn-danger">削除</button>
+      </form>
+    </div>
+    <p th:if="${#lists.isEmpty(positions)}" class="text-sm text-stone-500">ポジションがまだありません。</p>
+  </div>
+
+  <h2 class="mb-2 font-bold">追加</h2>
+  <form th:action="@{/admin/positions}" method="post" class="card flex flex-wrap items-end gap-2">
+    <label class="block">
+      <span class="text-xs">名前</span>
+      <input name="name" maxlength="30" required class="input w-40" placeholder="例：キッチン">
+    </label>
+    <label class="block">
+      <span class="text-xs">表示順</span>
+      <input type="number" name="displayOrder" min="0" max="999" value="0" required class="input w-20">
+    </label>
+    <button class="btn-primary">追加する</button>
+  </form>
+</main>
+</body>
+</html>

@@ -1,7 +1,9 @@
 package jp.bk.shiftmanager;
 
 import jp.bk.shiftmanager.auth.LoginUser;
+import jp.bk.shiftmanager.entity.Position;
 import jp.bk.shiftmanager.entity.User;
+import jp.bk.shiftmanager.mapper.PositionMapper;
 import jp.bk.shiftmanager.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
@@ -18,6 +20,7 @@ public class TestData {
     private final JdbcTemplate jdbc;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final PositionMapper positionMapper;
 
     /** 全データを削除し、設定を初期値に戻す */
     public void reset() {
@@ -50,5 +53,18 @@ public class TestData {
 
     public void requirePasswordChange(User user) {
         jdbc.update("UPDATE users SET must_change_password = TRUE WHERE id = ?", user.getId());
+    }
+
+    public Position position(String name, int displayOrder) {
+        Position position = new Position();
+        position.setName(name);
+        position.setDisplayOrder(displayOrder);
+        positionMapper.insert(position);
+        return position;
+    }
+
+    public void assignPosition(User user, Position position) {
+        jdbc.update("UPDATE users SET position_id = ? WHERE id = ?", position.getId(), user.getId());
+        user.setPositionId(position.getId());
     }
 }
