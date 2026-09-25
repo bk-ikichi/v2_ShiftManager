@@ -90,7 +90,7 @@ src/test/java/jp/bk/shiftmanager/
 **Interfaces:**
 - Produces: 全テーブル（DB設計書どおり）、`TestcontainersConfiguration`（package-private、`jp.bk.shiftmanager`）
 
-- [ ] **Step 1: gitリポジトリを作成し、Initializrから雛形を取得して展開する**
+- [x] **Step 1: gitリポジトリを作成し、Initializrから雛形を取得して展開する**
 
 作業ディレクトリ：`C:\Users\KamataRyunosuke\Desktop\BugerKingProject\v2_ShiftManager`（既存の `CLAUDE.md`・`documents/`・`docs/` は残す）
 
@@ -103,7 +103,7 @@ rm src/main/resources/application.properties
 
 展開後に `mvnw`、`pom.xml`、`src/main/java/jp/bk/shiftmanager/ShiftmanagerApplication.java`、`src/test/java/jp/bk/shiftmanager/TestcontainersConfiguration.java` が存在することを確認する。生成された `HELP.md` は削除してよい。
 
-- [ ] **Step 2: pom.xmlにMyBatisを追加する**
+- [x] **Step 2: pom.xmlにMyBatisを追加する**
 
 `<dependencies>` 内、`spring-boot-starter-webmvc` の直後に追加する（InitializrはMyBatisのBoot 4.1対応が未反映のため手動追加。4.1.0はBoot 4.1.0向けにビルドされている）：
 
@@ -115,7 +115,7 @@ rm src/main/resources/application.properties
 		</dependency>
 ```
 
-- [ ] **Step 3: application.yml と compose.yaml を作成し、テスト用コンテナのイメージを指定する**
+- [x] **Step 3: application.yml と compose.yaml を作成し、テスト用コンテナのイメージを指定する**
 
 `src/main/resources/application.yml`：
 
@@ -161,7 +161,7 @@ volumes:
 return new PostgreSQLContainer(DockerImageName.parse("postgres:17"));
 ```
 
-- [ ] **Step 4: 失敗するテストを書く**
+- [x] **Step 4: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/SchemaTest.java`：
 
@@ -203,14 +203,14 @@ class SchemaTest {
 }
 ```
 
-- [ ] **Step 5: テストが失敗することを確認する**
+- [x] **Step 5: テストが失敗することを確認する**
 
 Docker Desktopを起動しておくこと（Testcontainersが使用する）。
 
 Run: `./mvnw test -Dtest=SchemaTest`
 Expected: FAIL（テーブルが存在しないためのアサーション失敗、またはSQLエラー）
 
-- [ ] **Step 6: マイグレーションを書く**
+- [x] **Step 6: マイグレーションを書く**
 
 `src/main/resources/db/migration/V1__init.sql`：
 
@@ -320,12 +320,12 @@ CREATE UNIQUE INDEX shift_changes_unacked_key ON shift_changes (user_id, work_da
     WHERE acknowledged_at IS NULL;
 ```
 
-- [ ] **Step 7: テストが通ることを確認する**
+- [x] **Step 7: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=SchemaTest`
 Expected: PASS（2件）
 
-- [ ] **Step 8: .gitignoreを追記してコミットする**
+- [x] **Step 8: .gitignoreを追記してコミットする**
 
 `.gitignore`（生成済み）の末尾に追記：
 
@@ -342,7 +342,7 @@ git commit -m "feat: プロジェクト雛形とDBスキーマを作成
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 9: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
