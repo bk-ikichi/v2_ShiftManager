@@ -13,3 +13,7 @@ mybatis:
 app:
   # remember-me Cookieの署名鍵。本番では必ず環境変数で上書きする
   remember-me-key: ${REMEMBER_ME_KEY:dev-only-remember-me-key}
+
+server:
+  # HTTPS終端のリバースプロキシ配下でリダイレクト先をhttpsにするため
+  forward-headers-strategy: framework

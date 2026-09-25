@@ -1,0 +1,8 @@
+target/
+node_modules/
+.git/
+.idea/
+.vscode/
+documents/
+docs/
+src/main/resources/static/css/app.css
