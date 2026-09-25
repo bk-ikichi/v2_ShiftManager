@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('スタッフ管理')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-5xl px-4 py-6">
+  <div class="mb-4 flex items-center justify-between">
+    <h1 class="text-lg font-bold">スタッフ管理</h1>
+    <a th:href="@{/admin/staff/new}" class="btn-primary">スタッフを登録する</a>
+  </div>
+  <div th:replace="~{layout :: flash}"></div>
+  <div class="card overflow-x-auto p-0">
+    <table class="w-full text-sm">
+      <thead class="bg-stone-100 text-left">
+      <tr>
+        <th class="px-3 py-2">名前</th>
+        <th class="px-3 py-2">ログインID</th>
+        <th class="px-3 py-2">ポジション</th>
+        <th class="px-3 py-2">権限</th>
+        <th class="px-3 py-2">状態</th>
+        <th class="px-3 py-2"></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="s : ${staff}" th:classappend="${s.enabled} ? '' : 'text-stone-400'" class="border-t border-stone-100">
+        <td class="px-3 py-2" th:text="${s.name}"></td>
+        <td class="px-3 py-2" th:text="${s.loginId}"></td>
+        <td class="px-3 py-2" th:text="${s.positionName} ?: '未設定'"></td>
+        <td class="px-3 py-2" th:text="${s.admin} ? '管理者' : 'スタッフ'"></td>
+        <td class="px-3 py-2" th:text="${s.enabled} ? '有効' : '無効'"></td>
+        <td class="flex gap-2 px-3 py-2">
+          <a th:href="@{/admin/staff/{id}/edit(id=${s.id})}" class="btn-secondary py-1">編集</a>
+          <form th:action="@{/admin/staff/{id}/enabled(id=${s.id})}" method="post">
+            <input type="hidden" name="enabled" th:value="${!s.enabled}">
+            <button th:class="${s.enabled} ? 'btn-danger py-1' : 'btn-secondary py-1'"
+                    th:text="${s.enabled} ? '無効にする' : '有効にする'"></button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

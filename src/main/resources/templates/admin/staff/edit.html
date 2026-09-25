@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('スタッフ編集')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-md px-4 py-6">
+  <h1 class="mb-4 text-lg font-bold">スタッフ編集</h1>
+  <div th:replace="~{layout :: flash}"></div>
+  <form th:action="@{/admin/staff/{id}(id=${id})}" th:object="${form}" method="post" class="card mb-6 space-y-4">
+    <p th:each="err : ${#fields.globalErrors()}" th:text="${err}" class="rounded bg-red-50 p-3 text-sm text-red-700"></p>
+    <label class="block">
+      <span class="text-sm">名前</span>
+      <input th:field="*{name}" maxlength="50" class="input">
+      <span th:errors="*{name}" class="text-sm text-red-700"></span>
+    </label>
+    <label class="block">
+      <span class="text-sm">ログインID</span>
+      <input th:field="*{loginId}" autocapitalize="none" class="input">
+      <span th:errors="*{loginId}" class="text-sm text-red-700"></span>
+    </label>
+    <label class="block">
+      <span class="text-sm">ポジション</span>
+      <select th:field="*{positionId}" class="input">
+        <option value="">未設定</option>
+        <option th:each="p : ${positions}" th:value="${p.id}" th:text="${p.hidden} ? ${p.name} + '（非表示）' : ${p.name}"></option>
+      </select>
+    </label>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" th:field="*{admin}">
+      管理者権限を付ける
+    </label>
+    <div class="flex gap-2">
+      <button class="btn-primary">保存する</button>
+      <a th:href="@{/admin/staff}" class="btn-secondary">戻る</a>
+    </div>
+  </form>
+
+  <h2 class="mb-2 font-bold">パスワードのリセット</h2>
+  <form th:action="@{/admin/staff/{id}/password(id=${id})}" method="post" class="card space-y-3">
+    <p class="text-sm text-stone-600">仮パスワードを設定します。本人は次回ログイン時に変更が必要になります。</p>
+    <input name="tempPassword" autocomplete="off" placeholder="仮パスワード（半角8〜72文字）" class="input">
+    <button class="btn-secondary">リセットする</button>
+  </form>
+</main>
+</body>
+</html>
