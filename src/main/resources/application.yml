@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: shiftmanager
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/shiftmanager}
+    username: ${DATABASE_USERNAME:shiftmanager}
+    password: ${DATABASE_PASSWORD:shiftmanager}
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+app:
+  # remember-me Cookieの署名鍵。本番では必ず環境変数で上書きする
+  remember-me-key: ${REMEMBER_ME_KEY:dev-only-remember-me-key}
