@@ -38,6 +38,7 @@
 4. 全角文字や73文字以上のパスワード：500エラーにならず入力エラーとして表示される → Task 3、Task 5でテスト
 5. 同名ポジションの登録：「キッチン」が2つできず、エラーになる → Task 4でテスト
 6. 管理者が無効化・パスワードリセット・管理者権限の変更をしたスタッフのログイン中セッション：次のリクエストから反映される（無効化・リセットはログイン画面へ戻る、権限は再ログインなしで変わる） → Task 6でテスト
+7. 強制ログアウトされたスタッフ：ログイン画面に理由が表示される。静的ファイルの取得ではDBに問い合わせない → Task 7でテスト
 
 ## File Structure
 
@@ -3195,7 +3196,150 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 7: 締切日数の設定
+### Task 7: ユーザー状態照合の改善（静的ファイルの除外・強制ログアウトの理由表示）
+
+**背景：** Task 6のフィルタには2つの問題がある。(1) ログイン中は静的ファイル（CSS・JS・アイコン・マニフェスト）のリクエストでも毎回 `users` を問い合わせるため、DBがNeon（外部）だと1画面ごとに数回分の通信遅延が加わる。(2) 強制ログアウトされた人は理由の表示なしにログイン画面へ戻るため、不具合と誤解されやすい。
+
+**Files:**
+- Modify: `auth/SecurityConfig.java`（静的ファイルのパスを定数にまとめる）
+- Modify: `auth/UserStateCheckFilter.java`（静的ファイルを対象外にする・リダイレクト先を `/login?expired` にする）
+- Modify: `src/main/resources/templates/login.html`（`expired` のメッセージを表示する）
+- Test: `src/test/java/jp/bk/shiftmanager/auth/UserStateCheckFilterTest.java`
+
+（Javaのパスはすべて `src/main/java/jp/bk/shiftmanager/` からの相対）
+
+**Interfaces:**
+- Consumes: `UserStateCheckFilter`・`UserStateCheckFilterTest`（Task 6）、`SecurityConfig`（Task 2）、`login.html`（Task 2）
+- Produces: `SecurityConfig.STATIC_RESOURCES`（`String[]`。未ログインでも取得でき、ユーザー状態の照合もしない静的ファイルのパスパターン）
+
+**仕様：**
+- `/css/**`・`/js/**`・`/icons/**`・`/manifest.webmanifest` はフィルタの対象外にする（`shouldNotFilter`）。パスは `SecurityConfig.STATIC_RESOURCES` にまとめ、認可設定の `permitAll` と同じ定数を使う（片方だけ変更して食い違うのを防ぐ）
+- `/login`・`/error` は対象外にしない（静的ファイルではなく、照合してもログアウト済みなら何もしないため）
+- 強制ログアウト時のリダイレクト先を `/login?expired` にし、ログイン画面に「ログイン情報が変更されたため、ログアウトしました」と表示する
+
+- [ ] **Step 1: 失敗するテストを書く**
+
+`UserStateCheckFilterTest.java` を次のように変更する。
+
+既存の3テスト（無効化・リセット・別端末での変更）の `redirectedUrl("/login")` をすべて `redirectedUrl("/login?expired")` に変える。
+
+import を追加する：
+
+```java
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
+import org.hamcrest.Matchers;
+```
+
+テストを2件追加する（`login` ヘルパーの前）：
+
+```java
+    @Test
+    void 静的ファイルのリクエストではユーザー状態を照合しない() throws Exception {
+        User taro = data.user("taro", "山田太郎", false);
+        MockHttpSession session = login("taro");
+
+        mvc.perform(post("/admin/staff/{id}/enabled", taro.getId()).with(user(boss)).with(csrf())
+                        .param("enabled", "false"))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        // 照合するとログアウトされてログイン画面へ戻るが、静的ファイルは照合しないのでそのまま処理される（ファイルが無いので404）
+        mvc.perform(get("/css/not-exists.css").session(session)).andExpect(status().isNotFound());
+        // 静的ファイルでログアウトされていないので、通常の画面で初めてログアウトされる
+        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login?expired"));
+    }
+
+    @Test
+    void 強制ログアウト後のログイン画面に理由が表示される() throws Exception {
+        mvc.perform(get("/login").param("expired", ""))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("ログイン情報が変更されたため、ログアウトしました")));
+    }
+```
+
+- [ ] **Step 2: テストが失敗することを確認する**
+
+Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
+Expected: FAIL（5件。リダイレクト先が `/login` のままの3件、静的ファイルでログアウトされる1件、メッセージが無い1件）
+
+- [ ] **Step 3: SecurityConfigに静的ファイルのパスをまとめる**
+
+`auth/SecurityConfig.java` の `REMEMBER_ME_SECONDS` の下に追加する：
+
+```java
+    /** 未ログインでも取得でき、ログイン中ユーザーの状態照合も行わない静的ファイル */
+    public static final String[] STATIC_RESOURCES = {"/css/**", "/js/**", "/icons/**", "/manifest.webmanifest"};
+```
+
+`authorizeHttpRequests` の `permitAll` を次のように変える：
+
+```java
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(STATIC_RESOURCES).permitAll()
+                        .requestMatchers("/login", "/error").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+```
+
+- [ ] **Step 4: フィルタを変更する**
+
+`auth/UserStateCheckFilter.java` に次を追加する（import `java.util.Arrays`、`java.util.List`、`org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher`、`org.springframework.security.web.util.matcher.RequestMatcher`）：
+
+```java
+    /** 照合しないリクエスト。静的ファイルの取得ごとにDBへ問い合わせないため */
+    private static final List<RequestMatcher> SKIPPED = Arrays.stream(SecurityConfig.STATIC_RESOURCES)
+            .<RequestMatcher>map(PathPatternRequestMatcher.withDefaults()::matcher)
+            .toList();
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return SKIPPED.stream().anyMatch(matcher -> matcher.matches(request));
+    }
+```
+
+`doFilterInternal` のリダイレクト先を変える：
+
+```java
+            response.sendRedirect(request.getContextPath() + "/login?expired");
+```
+
+- [ ] **Step 5: ログイン画面にメッセージを追加する**
+
+`login.html` の `param.logout` の行の直後に追加する：
+
+```html
+  <p th:if="${param.expired}" class="mb-4 rounded bg-amber-50 p-3 text-sm text-amber-800">ログイン情報が変更されたため、ログアウトしました</p>
+```
+
+- [ ] **Step 6: テストが通ることを確認する**
+
+Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
+Expected: PASS（7件）
+
+- [ ] **Step 7: 全テストを実行してコミットする**
+
+Run: `./mvnw test`
+Expected: PASS
+
+```bash
+git add -A
+git commit -m "feat: 静的ファイルでのユーザー状態照合を省略し、強制ログアウトの理由を表示
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 8: この計画ファイルのTask 7のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+
+```bash
+git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
+git commit -m "docs: Plan 1 Task 7 完了
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 8: 締切日数の設定
 
 **Files:**
 - Create: `mapper/AppSettingMapper.java`、`repository/AppSettingRepository.java`、`service/SettingService.java`、`controller/SettingsController.java`
@@ -3459,18 +3603,18 @@ git commit -m "feat: 申請締切日数の設定
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 7: この計画ファイルのTask 7のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [ ] **Step 7: この計画ファイルのTask 8のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
-git commit -m "docs: Plan 1 Task 7 完了
+git commit -m "docs: Plan 1 Task 8 完了
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 8: PWA対応とDockerイメージ
+### Task 9: PWA対応とDockerイメージ
 
 **Files:**
 - Create: `src/main/resources/static/manifest.webmanifest`、`src/main/resources/static/icons/icon.svg`
@@ -3658,11 +3802,11 @@ git commit -m "feat: PWAマニフェストとDockerイメージ
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 8のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [ ] **Step 9: この計画ファイルのTask 9のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
-git commit -m "docs: Plan 1 Task 8 完了
+git commit -m "docs: Plan 1 Task 9 完了
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
