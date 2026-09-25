@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="|${title} - シフト管理|">シフト管理</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:fragment="header" class="border-b border-stone-200 bg-white">
+  <nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm">
+    <a th:href="@{/}" class="font-bold">シフト管理</a>
+    <th:block sec:authorize="hasRole('ADMIN')">
+      <a th:href="@{/admin/staff}" class="hover:underline">スタッフ</a>
+      <a th:href="@{/admin/positions}" class="hover:underline">ポジション</a>
+      <a th:href="@{/admin/settings}" class="hover:underline">設定</a>
+    </th:block>
+    <span class="ml-auto text-stone-500" sec:authentication="principal.name">名前</span>
+    <a th:href="@{/password}" class="hover:underline">パスワード変更</a>
+    <form th:action="@{/logout}" method="post">
+      <button class="hover:underline">ログアウト</button>
+    </form>
+  </nav>
+</header>
+<div th:fragment="flash">
+  <p th:if="${message}" th:text="${message}" class="mb-4 rounded bg-green-50 p-3 text-sm text-green-800"></p>
+  <p th:if="${error}" th:text="${error}" class="mb-4 rounded bg-red-50 p-3 text-sm text-red-700"></p>
+</div>
+</body>
+</html>

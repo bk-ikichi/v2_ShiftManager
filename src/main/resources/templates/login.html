@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('ログイン')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<main class="mx-auto max-w-sm px-4 py-12">
+  <h1 class="mb-6 text-center text-xl font-bold">シフト管理</h1>
+  <p th:if="${param.error}" class="mb-4 rounded bg-red-50 p-3 text-sm text-red-700">ログインIDまたはパスワードが違います</p>
+  <p th:if="${param.logout}" class="mb-4 rounded bg-stone-100 p-3 text-sm">ログアウトしました</p>
+  <form th:action="@{/login}" method="post" class="card space-y-4">
+    <label class="block">
+      <span class="text-sm">ログインID</span>
+      <input name="loginId" autocomplete="username" autocapitalize="none" required class="input">
+    </label>
+    <label class="block">
+      <span class="text-sm">パスワード</span>
+      <input type="password" name="password" autocomplete="current-password" required class="input">
+    </label>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="remember-me" checked>
+      ログイン状態を保持する（10日間）
+    </label>
+    <button class="btn-primary w-full">ログイン</button>
+  </form>
+</main>
+</body>
+</html>
