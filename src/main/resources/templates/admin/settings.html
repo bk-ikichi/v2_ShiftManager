@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('設定')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-md px-4 py-6">
+  <h1 class="mb-4 text-lg font-bold">設定</h1>
+  <div th:replace="~{layout :: flash}"></div>
+  <form th:action="@{/admin/settings}" method="post" class="card space-y-4">
+    <label class="block">
+      <span class="text-sm">申請の締切（サイクル開始日の何日前か）</span>
+      <input type="number" name="deadlineDaysBefore" th:value="${deadlineDaysBefore}" min="0" max="30" class="input w-24">
+    </label>
+    <p class="text-sm text-stone-600">例：5日前の場合、11日〜20日分の締切は6日です。</p>
+    <button class="btn-primary">保存する</button>
+  </form>
+</main>
+</body>
+</html>
