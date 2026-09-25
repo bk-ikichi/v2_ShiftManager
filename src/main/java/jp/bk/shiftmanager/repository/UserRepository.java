@@ -27,4 +27,8 @@ public class UserRepository {
     public void insert(User user) {
         userMapper.insert(user);
     }
+
+    public void updatePassword(long id, String hash, boolean mustChange) {
+        userMapper.updatePassword(id, hash, mustChange);
+    }
 }
