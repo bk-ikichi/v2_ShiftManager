@@ -17,6 +17,9 @@ public class SecurityConfig {
     /** ログイン状態の保持期間（10日） */
     public static final int REMEMBER_ME_SECONDS = 10 * 24 * 60 * 60;
 
+    /** 未ログインでも取得でき、ログイン中ユーザーの状態照合も行わない静的ファイル */
+    public static final String[] STATIC_RESOURCES = {"/css/**", "/js/**", "/icons/**", "/manifest.webmanifest"};
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -27,8 +30,8 @@ public class SecurityConfig {
             @Value("${app.remember-me-key}") String rememberMeKey, UserRepository userRepository) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error", "/css/**", "/js/**", "/icons/**",
-                                "/manifest.webmanifest").permitAll()
+                        .requestMatchers(STATIC_RESOURCES).permitAll()
+                        .requestMatchers("/login", "/error").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(form -> form

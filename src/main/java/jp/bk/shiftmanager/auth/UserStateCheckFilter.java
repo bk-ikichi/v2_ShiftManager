@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import jp.bk.shiftmanager.entity.User;
 import jp.bk.shiftmanager.repository.UserRepository;
@@ -16,6 +18,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -30,6 +34,16 @@ public class UserStateCheckFilter extends OncePerRequestFilter {
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
     private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
+    /** 照合しないリクエスト。静的ファイルの取得ごとにDBへ問い合わせないため */
+    private static final List<RequestMatcher> SKIPPED = Arrays.stream(SecurityConfig.STATIC_RESOURCES)
+            .<RequestMatcher>map(PathPatternRequestMatcher.withDefaults()::matcher)
+            .toList();
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return SKIPPED.stream().anyMatch(matcher -> matcher.matches(request));
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
@@ -43,7 +57,7 @@ public class UserStateCheckFilter extends OncePerRequestFilter {
         if (latest.isEmpty() || !latest.get().isEnabled()
                 || !latest.get().getPasswordHash().equals(current.getPasswordHash())) {
             logoutHandler.logout(request, response, authentication);
-            response.sendRedirect(request.getContextPath() + "/login");
+            response.sendRedirect(request.getContextPath() + "/login?expired");
             return;
         }
         LoginUser refreshed = LoginUser.from(latest.get());

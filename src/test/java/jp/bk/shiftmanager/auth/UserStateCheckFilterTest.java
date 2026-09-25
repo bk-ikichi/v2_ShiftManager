@@ -5,12 +5,14 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jp.bk.shiftmanager.IntegrationTestBase;
 import jp.bk.shiftmanager.TestData;
 import jp.bk.shiftmanager.entity.User;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpSession;
@@ -35,7 +37,7 @@ class UserStateCheckFilterTest extends IntegrationTestBase {
                         .param("enabled", "false"))
                 .andExpect(redirectedUrl("/admin/staff"));
 
-        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login"));
+        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login?expired"));
     }
 
     @Test
@@ -48,7 +50,7 @@ class UserStateCheckFilterTest extends IntegrationTestBase {
                         .param("tempPassword", "temppass1"))
                 .andExpect(redirectedUrl("/admin/staff/" + taro.getId() + "/edit"));
 
-        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login"));
+        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login?expired"));
     }
 
     @Test
@@ -64,7 +66,7 @@ class UserStateCheckFilterTest extends IntegrationTestBase {
                 .andExpect(redirectedUrl("/"));
 
         mvc.perform(get("/").session(phone)).andExpect(status().isOk());
-        mvc.perform(get("/").session(pc)).andExpect(redirectedUrl("/login"));
+        mvc.perform(get("/").session(pc)).andExpect(redirectedUrl("/login?expired"));
     }
 
     @Test
@@ -93,6 +95,28 @@ class UserStateCheckFilterTest extends IntegrationTestBase {
                 .andExpect(redirectedUrl("/admin/staff"));
 
         mvc.perform(get("/admin/staff").session(session)).andExpect(status().isOk());
+    }
+
+    @Test
+    void 静的ファイルのリクエストではユーザー状態を照合しない() throws Exception {
+        User taro = data.user("taro", "山田太郎", false);
+        MockHttpSession session = login("taro");
+
+        mvc.perform(post("/admin/staff/{id}/enabled", taro.getId()).with(user(boss)).with(csrf())
+                        .param("enabled", "false"))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        // 照合するとログアウトされてログイン画面へ戻るが、静的ファイルは照合しないのでそのまま処理される（ファイルが無いので404）
+        mvc.perform(get("/css/not-exists.css").session(session)).andExpect(status().isNotFound());
+        // 静的ファイルでログアウトされていないので、通常の画面で初めてログアウトされる
+        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login?expired"));
+    }
+
+    @Test
+    void 強制ログアウト後のログイン画面に理由が表示される() throws Exception {
+        mvc.perform(get("/login").param("expired", ""))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("ログイン情報が変更されたため、ログアウトしました")));
     }
 
     /** ログイン画面から実際にログインし、そのセッションを返す */
