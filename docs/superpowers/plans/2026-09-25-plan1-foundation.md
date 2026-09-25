@@ -1627,7 +1627,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `service.PositionService#findAll(): List<Position>`、`#create(PositionForm)`、`#update(long, PositionForm)`、`#delete(long)`
   - `TestData#position(String name, int displayOrder): Position`、`#assignPosition(User, Position)`
 
-- [ ] **Step 1: TestDataに追加する**
+- [x] **Step 1: TestDataに追加する**
 
 `TestData.java` にフィールドとメソッドを追加（import `jp.bk.shiftmanager.entity.Position`、`jp.bk.shiftmanager.mapper.PositionMapper`）：
 
@@ -1648,7 +1648,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
     }
 ```
 
-- [ ] **Step 2: 失敗するテストを書く**
+- [x] **Step 2: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/PositionAdminTest.java`：
 
@@ -1794,12 +1794,12 @@ class PositionAdminTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 3: テストが失敗することを確認する**
+- [x] **Step 3: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=PositionAdminTest`
 Expected: FAIL（コンパイルエラー：`Position`、`PositionMapper` が存在しない）
 
-- [ ] **Step 4: エンティティ・Mapper・Repositoryを実装する**
+- [x] **Step 4: エンティティ・Mapper・Repositoryを実装する**
 
 `src/main/java/jp/bk/shiftmanager/entity/Position.java`：
 
@@ -1923,7 +1923,7 @@ public class PositionRepository {
 }
 ```
 
-- [ ] **Step 5: フォーム・サービス・コントローラー・テンプレートを実装する**
+- [x] **Step 5: フォーム・サービス・コントローラー・テンプレートを実装する**
 
 `src/main/java/jp/bk/shiftmanager/form/PositionForm.java`：
 
@@ -2158,12 +2158,12 @@ public class PositionAdminController {
 </html>
 ```
 
-- [ ] **Step 6: テストが通ることを確認する**
+- [x] **Step 6: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=PositionAdminTest`
 Expected: PASS（9件）
 
-- [ ] **Step 7: 全テストを実行してコミットする**
+- [x] **Step 7: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -2175,7 +2175,7 @@ git commit -m "feat: ポジション管理
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 8: この計画ファイルのTask 4のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 8: この計画ファイルのTask 4のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
