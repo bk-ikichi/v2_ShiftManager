@@ -3217,7 +3217,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - `/login`・`/error` は対象外にしない（静的ファイルではなく、照合してもログアウト済みなら何もしないため）
 - 強制ログアウト時のリダイレクト先を `/login?expired` にし、ログイン画面に「ログイン情報が変更されたため、ログアウトしました」と表示する
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `UserStateCheckFilterTest.java` を次のように変更する。
 
@@ -3257,12 +3257,12 @@ import org.hamcrest.Matchers;
     }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
 Expected: FAIL（5件。リダイレクト先が `/login` のままの3件、静的ファイルでログアウトされる1件、メッセージが無い1件）
 
-- [ ] **Step 3: SecurityConfigに静的ファイルのパスをまとめる**
+- [x] **Step 3: SecurityConfigに静的ファイルのパスをまとめる**
 
 `auth/SecurityConfig.java` の `REMEMBER_ME_SECONDS` の下に追加する：
 
@@ -3281,7 +3281,7 @@ Expected: FAIL（5件。リダイレクト先が `/login` のままの3件、静
                         .anyRequest().authenticated())
 ```
 
-- [ ] **Step 4: フィルタを変更する**
+- [x] **Step 4: フィルタを変更する**
 
 `auth/UserStateCheckFilter.java` に次を追加する（import `java.util.Arrays`、`java.util.List`、`org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher`、`org.springframework.security.web.util.matcher.RequestMatcher`）：
 
@@ -3303,7 +3303,7 @@ Expected: FAIL（5件。リダイレクト先が `/login` のままの3件、静
             response.sendRedirect(request.getContextPath() + "/login?expired");
 ```
 
-- [ ] **Step 5: ログイン画面にメッセージを追加する**
+- [x] **Step 5: ログイン画面にメッセージを追加する**
 
 `login.html` の `param.logout` の行の直後に追加する：
 
@@ -3311,12 +3311,12 @@ Expected: FAIL（5件。リダイレクト先が `/login` のままの3件、静
   <p th:if="${param.expired}" class="mb-4 rounded bg-amber-50 p-3 text-sm text-amber-800">ログイン情報が変更されたため、ログアウトしました</p>
 ```
 
-- [ ] **Step 6: テストが通ることを確認する**
+- [x] **Step 6: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
 Expected: PASS（7件）
 
-- [ ] **Step 7: 全テストを実行してコミットする**
+- [x] **Step 7: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -3328,7 +3328,7 @@ git commit -m "feat: 静的ファイルでのユーザー状態照合を省略�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 8: この計画ファイルのTask 7のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 8: この計画ファイルのTask 7のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
