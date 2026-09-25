@@ -2205,7 +2205,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `UserRepository#findStaffRows(): List<StaffRow>`、`#updateProfile(User)`、`#updateEnabled(long, boolean)`、`#existsLoginId(String loginId, long excludeId): boolean`
   - `service.StaffService#findAll(): List<StaffRow>`、`#create(StaffCreateForm): long`、`#editForm(long): StaffEditForm`、`#update(long id, StaffEditForm, long actorId)`、`#resetPassword(long id, String tempPassword)`、`#setEnabled(long id, boolean enabled, long actorId)`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/StaffAdminTest.java`：
 
@@ -2405,12 +2405,12 @@ class StaffAdminTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=StaffAdminTest`
 Expected: FAIL（`/admin/staff` が404のため多数失敗）
 
-- [ ] **Step 3: DTO・Mapper・Repositoryを拡張する**
+- [x] **Step 3: DTO・Mapper・Repositoryを拡張する**
 
 `src/main/java/jp/bk/shiftmanager/dto/StaffRow.java`：
 
@@ -2477,7 +2477,7 @@ public class StaffRow {
     }
 ```
 
-- [ ] **Step 4: フォームとサービスを実装する**
+- [x] **Step 4: フォームとサービスを実装する**
 
 `src/main/java/jp/bk/shiftmanager/form/StaffEditForm.java`：
 
@@ -2649,7 +2649,7 @@ public class StaffService {
 }
 ```
 
-- [ ] **Step 5: コントローラーとテンプレートを実装する**
+- [x] **Step 5: コントローラーとテンプレートを実装する**
 
 `src/main/java/jp/bk/shiftmanager/controller/StaffAdminController.java`：
 
@@ -2915,12 +2915,12 @@ public class StaffAdminController {
 </html>
 ```
 
-- [ ] **Step 6: テストが通ることを確認する**
+- [x] **Step 6: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=StaffAdminTest`
 Expected: PASS（13件）
 
-- [ ] **Step 7: 全テストを実行してコミットする**
+- [x] **Step 7: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -2932,7 +2932,7 @@ git commit -m "feat: スタッフ管理（登録・編集・パスワードリ�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 8: この計画ファイルのTask 5のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 8: この計画ファイルのTask 5のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
