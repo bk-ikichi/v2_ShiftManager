@@ -1163,7 +1163,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `UserMapper#updatePassword(long id, String hash, boolean mustChange): int`、`UserRepository#updatePassword(long id, String hash, boolean mustChange): void`
   - `service.PasswordService#change(long userId, String currentPassword, String newPassword): String`（新しいハッシュを返す）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/PasswordChangeTest.java`：
 
@@ -1298,12 +1298,12 @@ class PasswordChangeTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=PasswordChangeTest`
 Expected: FAIL（コンパイルエラー：`PasswordService` が存在しない）
 
-- [ ] **Step 3: 例外・パスワードルール・Mapper/Repositoryを実装する**
+- [x] **Step 3: 例外・パスワードルール・Mapper/Repositoryを実装する**
 
 `src/main/java/jp/bk/shiftmanager/exception/BusinessException.java`：
 
@@ -1353,7 +1353,7 @@ public final class PasswordRules {
     }
 ```
 
-- [ ] **Step 4: パスワード変更を実装する**
+- [x] **Step 4: パスワード変更を実装する**
 
 `src/main/java/jp/bk/shiftmanager/form/PasswordChangeForm.java`：
 
@@ -1579,12 +1579,12 @@ public class WebConfig implements WebMvcConfigurer {
 </html>
 ```
 
-- [ ] **Step 5: テストが通ることを確認する**
+- [x] **Step 5: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=PasswordChangeTest`
 Expected: PASS（7件）
 
-- [ ] **Step 6: 全テストを実行してコミットする**
+- [x] **Step 6: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -1596,7 +1596,7 @@ git commit -m "feat: パスワード変更と初回ログイン時の変更強�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 7: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 7: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
