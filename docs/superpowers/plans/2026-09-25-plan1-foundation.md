@@ -37,6 +37,7 @@
 3. パスワード変更後の古いremember-me Cookie（別端末に残っているもの）：自動ログインされない → Task 3でテスト
 4. 全角文字や73文字以上のパスワード：500エラーにならず入力エラーとして表示される → Task 3、Task 5でテスト
 5. 同名ポジションの登録：「キッチン」が2つできず、エラーになる → Task 4でテスト
+6. 管理者が無効化・パスワードリセット・管理者権限の変更をしたスタッフのログイン中セッション：次のリクエストから反映される（無効化・リセットはログイン画面へ戻る、権限は再ログインなしで変わる） → Task 6でテスト
 
 ## File Structure
 
@@ -57,7 +58,7 @@ src/main/resources/
 src/main/java/jp/bk/shiftmanager/
   ShiftmanagerApplication.java             （生成）
   auth/        SecurityConfig, LoginUser, LoginUserDetailsService, InitialAdminRunner,
-               PasswordRules, ForcePasswordChangeInterceptor
+               PasswordRules, ForcePasswordChangeInterceptor, UserStateCheckFilter
   config/      WebConfig
   controller/  LoginController, HomeController, PasswordChangeController,
                PositionAdminController, StaffAdminController, SettingsController
@@ -72,7 +73,7 @@ src/main/java/jp/bk/shiftmanager/
 src/test/java/jp/bk/shiftmanager/
   TestcontainersConfiguration.java         （生成、イメージをpostgres:17に変更）
   IntegrationTestBase.java, TestData.java, SchemaTest.java, PwaTest.java
-  auth/InitialAdminRunnerTest.java
+  auth/InitialAdminRunnerTest.java, auth/UserStateCheckFilterTest.java
   controller/LoginTest.java, PasswordChangeTest.java, PositionAdminTest.java,
              StaffAdminTest.java, SettingsTest.java
 ```
@@ -2943,7 +2944,258 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 6: 締切日数の設定
+### Task 6: ログイン中セッションへのユーザー状態の反映
+
+**背景：** セッションにはログイン時点の `LoginUser` がそのまま残るため、Task 5の無効化・パスワードリセット・管理者権限の変更が、ログイン中のブラウザには反映されない（無効化した退職者がセッション切れまで操作できる、権限を外しても管理画面を使える）。リクエストごとにDBの最新状態と照合するフィルタを追加して、即時に反映させる。
+
+**Files:**
+- Create: `auth/UserStateCheckFilter.java`
+- Modify: `auth/SecurityConfig.java`（フィルタを登録する）
+- Test: `src/test/java/jp/bk/shiftmanager/auth/UserStateCheckFilterTest.java`
+
+（Javaのパスはすべて `src/main/java/jp/bk/shiftmanager/` からの相対）
+
+**Interfaces:**
+- Consumes: `UserRepository#findById`・`LoginUser#from`・`LoginUser#getPasswordHash`・`SecurityConfig`（Task 2）、`POST /password`（Task 3）、`POST /admin/staff/{id}`・`/{id}/password`・`/{id}/enabled`（Task 5）、`IntegrationTestBase`・`TestData#user`・`#login`（Task 2）
+- Produces: `auth.UserStateCheckFilter`（`OncePerRequestFilter`。コンストラクタ引数 `UserRepository`）
+
+**仕様：**
+- ログイン中ユーザー（principalが `LoginUser`）のリクエストごとに `users` を主キーで1件取得し、セッション上の `LoginUser` と比べる
+- ユーザーが存在しない・無効・パスワードハッシュが違う（管理者によるリセット、別端末での変更）→ ログアウト（セッション破棄）して `/login` へリダイレクトする
+- 管理者権限・変更必須フラグ・ログインID・名前が違う → セッション上の `LoginUser` をDBの内容で差し替えて、そのまま処理を続ける
+- 自分でパスワードを変更した端末は、`PasswordChangeController` がセッションのハッシュを更新するため、ログアウトされない
+- `@Component` にしない。Beanにするとサーブレットフィルタとしても自動登録され、`OncePerRequestFilter` の仕組みでセキュリティフィルタチェーン内の実行が飛ばされるため。`SecurityConfig` で `new` して `RememberMeAuthenticationFilter` の直後に登録する（認可判定より前に権限を差し替えるため）
+- `LoginUser` に `CredentialsContainer` を実装しないこと（ログイン後にパスワードハッシュが消去され、照合できなくなる）
+
+- [ ] **Step 1: 失敗するテストを書く**
+
+`src/test/java/jp/bk/shiftmanager/auth/UserStateCheckFilterTest.java`：
+
+```java
+package jp.bk.shiftmanager.auth;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import jp.bk.shiftmanager.IntegrationTestBase;
+import jp.bk.shiftmanager.TestData;
+import jp.bk.shiftmanager.entity.User;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpSession;
+
+/** 実際のログインで作ったセッションを使い、管理者の操作がログイン中のセッションに反映されることを確かめる */
+class UserStateCheckFilterTest extends IntegrationTestBase {
+
+    LoginUser boss;
+
+    @BeforeEach
+    void setUp() {
+        boss = data.login(data.user("boss", "店長", true));
+    }
+
+    @Test
+    void 無効化されたスタッフのログイン中セッションはログイン画面へ戻される() throws Exception {
+        User taro = data.user("taro", "山田太郎", false);
+        MockHttpSession session = login("taro");
+        mvc.perform(get("/").session(session)).andExpect(status().isOk());
+
+        mvc.perform(post("/admin/staff/{id}/enabled", taro.getId()).with(user(boss)).with(csrf())
+                        .param("enabled", "false"))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void 仮パスワードにリセットされたスタッフのログイン中セッションはログイン画面へ戻される() throws Exception {
+        User taro = data.user("taro", "山田太郎", false);
+        MockHttpSession session = login("taro");
+        mvc.perform(get("/").session(session)).andExpect(status().isOk());
+
+        mvc.perform(post("/admin/staff/{id}/password", taro.getId()).with(user(boss)).with(csrf())
+                        .param("tempPassword", "temppass1"))
+                .andExpect(redirectedUrl("/admin/staff/" + taro.getId() + "/edit"));
+
+        mvc.perform(get("/").session(session)).andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void 別の端末でパスワードを変更すると他のセッションは戻され変更した端末は使い続けられる() throws Exception {
+        data.user("taro", "山田太郎", false);
+        MockHttpSession pc = login("taro");
+        MockHttpSession phone = login("taro");
+
+        mvc.perform(post("/password").session(phone).with(csrf())
+                        .param("currentPassword", TestData.PASSWORD)
+                        .param("newPassword", "newpass123")
+                        .param("confirmPassword", "newpass123"))
+                .andExpect(redirectedUrl("/"));
+
+        mvc.perform(get("/").session(phone)).andExpect(status().isOk());
+        mvc.perform(get("/").session(pc)).andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void 管理者権限を外されると次のリクエストから管理画面を使えない() throws Exception {
+        User hanako = data.user("hanako", "佐藤花子", true);
+        MockHttpSession session = login("hanako");
+        mvc.perform(get("/admin/staff").session(session)).andExpect(status().isOk());
+
+        // adminを送らない＝チェックを外した状態
+        mvc.perform(post("/admin/staff/{id}", hanako.getId()).with(user(boss)).with(csrf())
+                        .param("loginId", "hanako").param("name", "佐藤花子"))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        mvc.perform(get("/admin/staff").session(session)).andExpect(status().isForbidden());
+        mvc.perform(get("/").session(session)).andExpect(status().isOk());
+    }
+
+    @Test
+    void 管理者権限を付けられると再ログインなしで管理画面を使える() throws Exception {
+        User taro = data.user("taro", "山田太郎", false);
+        MockHttpSession session = login("taro");
+        mvc.perform(get("/admin/staff").session(session)).andExpect(status().isForbidden());
+
+        mvc.perform(post("/admin/staff/{id}", taro.getId()).with(user(boss)).with(csrf())
+                        .param("loginId", "taro").param("name", "山田太郎").param("admin", "true"))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        mvc.perform(get("/admin/staff").session(session)).andExpect(status().isOk());
+    }
+
+    /** ログイン画面から実際にログインし、そのセッションを返す */
+    private MockHttpSession login(String loginId) throws Exception {
+        return (MockHttpSession) mvc.perform(post("/login").param("loginId", loginId)
+                        .param("password", TestData.PASSWORD).with(csrf()))
+                .andExpect(authenticated())
+                .andReturn().getRequest().getSession(false);
+    }
+}
+```
+
+- [ ] **Step 2: テストが失敗することを確認する**
+
+Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
+Expected: FAIL（5件。無効化・リセット・別端末の変更後もセッションが使えてしまい、権限の変更も反映されないため）
+
+- [ ] **Step 3: フィルタを実装する**
+
+`src/main/java/jp/bk/shiftmanager/auth/UserStateCheckFilter.java`：
+
+```java
+package jp.bk.shiftmanager.auth;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Optional;
+import jp.bk.shiftmanager.entity.User;
+import jp.bk.shiftmanager.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+/**
+ * ログイン中ユーザーの状態をリクエストごとにDBと照合する。
+ * セッションにはログイン時点の情報が残るため、管理者による無効化・パスワードリセット・権限変更を即時に反映させる。
+ * Beanにするとサーブレットフィルタとしても自動登録されてしまうため、SecurityConfigでnewして登録する
+ */
+@RequiredArgsConstructor
+public class UserStateCheckFilter extends OncePerRequestFilter {
+
+    private final UserRepository userRepository;
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+    private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof LoginUser current)) {
+            chain.doFilter(request, response);
+            return;
+        }
+        Optional<User> latest = userRepository.findById(current.getId());
+        // 無効化・パスワードの変更（管理者によるリセット、別端末での変更）はログアウトさせる
+        if (latest.isEmpty() || !latest.get().isEnabled()
+                || !latest.get().getPasswordHash().equals(current.getPasswordHash())) {
+            logoutHandler.logout(request, response, authentication);
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        LoginUser refreshed = LoginUser.from(latest.get());
+        if (changed(current, refreshed)) {
+            // 権限・名前などの変更は、セッション上のログイン情報を差し替えて反映する
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(
+                    UsernamePasswordAuthenticationToken.authenticated(refreshed, null, refreshed.getAuthorities()));
+            SecurityContextHolder.setContext(context);
+            securityContextRepository.saveContext(context, request, response);
+        }
+        chain.doFilter(request, response);
+    }
+
+    private boolean changed(LoginUser current, LoginUser refreshed) {
+        return current.isAdmin() != refreshed.isAdmin()
+                || current.isMustChangePassword() != refreshed.isMustChangePassword()
+                || !current.getLoginId().equals(refreshed.getLoginId())
+                || !current.getName().equals(refreshed.getName());
+    }
+}
+```
+
+- [ ] **Step 4: SecurityConfigにフィルタを登録する**
+
+`auth/SecurityConfig.java` の `securityFilterChain` に引数 `UserRepository userRepository` を追加し、`http` の設定の最後（`.rememberMe(...)` の後）に次を追加する（import `jp.bk.shiftmanager.repository.UserRepository`、`org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter`）：
+
+```java
+                // 管理者による無効化・リセット・権限変更をログイン中のセッションにも反映する
+                .addFilterAfter(new UserStateCheckFilter(userRepository), RememberMeAuthenticationFilter.class);
+```
+
+- [ ] **Step 5: テストが通ることを確認する**
+
+Run: `./mvnw test -Dtest=UserStateCheckFilterTest`
+Expected: PASS（5件）
+
+- [ ] **Step 6: 全テストを実行してコミットする**
+
+Run: `./mvnw test`
+Expected: PASS（既存テストは `data.login` でDBの最新状態から `LoginUser` を作っているため、フィルタの影響を受けない）
+
+```bash
+git add -A
+git commit -m "feat: 無効化・パスワードリセット・権限変更をログイン中のセッションに反映
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 7: この計画ファイルのTask 6のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+
+```bash
+git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
+git commit -m "docs: Plan 1 Task 6 完了
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 7: 締切日数の設定
 
 **Files:**
 - Create: `mapper/AppSettingMapper.java`、`repository/AppSettingRepository.java`、`service/SettingService.java`、`controller/SettingsController.java`
@@ -3207,18 +3459,18 @@ git commit -m "feat: 申請締切日数の設定
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 7: この計画ファイルのTask 6のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [ ] **Step 7: この計画ファイルのTask 7のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
-git commit -m "docs: Plan 1 Task 6 完了
+git commit -m "docs: Plan 1 Task 7 完了
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 7: PWA対応とDockerイメージ
+### Task 8: PWA対応とDockerイメージ
 
 **Files:**
 - Create: `src/main/resources/static/manifest.webmanifest`、`src/main/resources/static/icons/icon.svg`
@@ -3406,11 +3658,11 @@ git commit -m "feat: PWAマニフェストとDockerイメージ
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 7のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [ ] **Step 9: この計画ファイルのTask 8のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-25-plan1-foundation.md
-git commit -m "docs: Plan 1 Task 7 完了
+git commit -m "docs: Plan 1 Task 8 完了
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
