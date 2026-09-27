@@ -1181,7 +1181,7 @@ public class ShiftAdminController {
 Run: `./mvnw test -Dtest=ShiftWarningsTest,ShiftDayTest`
 Expected: PASS
 
-- [x] **Step 9: ブラウザで動作を確認する**（未実施：ユーザーに確認を依頼）
+- [x] **Step 9: ブラウザで動作を確認する**
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、管理者でログインしてポジション・スタッフ・申請を用意してから `/admin/shifts?date=（申請のある日）` を開き、次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - 名前を選ぶと申請IN・OUTが表示され、申請がない人は `--:--` と「申請がありません」が出る
