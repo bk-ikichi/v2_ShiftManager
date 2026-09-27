@@ -1231,7 +1231,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `service.ShiftService#saveDay(ShiftDayForm)`（`@Transactional`）、`#getDay(LocalDate, ShiftDayForm): ShiftDayView`（入力をそのまま表示し直す）、非公開の `parseRows(LocalDate, ShiftDayForm, List<Shift> before): List<Shift>`（Task 4で使う）
   - 画面：`POST /admin/shifts`（成功：`/admin/shifts?date=` へリダイレクトし `message`「登録しました」、入力エラー：リダイレクトせず `admin/shifts/day` を表示し直し `error` にメッセージ）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/ShiftSaveTest.java`：
 
@@ -1485,12 +1485,12 @@ class ShiftSaveTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=ShiftSaveTest`
 Expected: FAIL（`POST /admin/shifts` がないため、リダイレクト・モデルの検証が失敗する）
 
-- [ ] **Step 3: フォーム・Mapper・Repositoryを実装する**
+- [x] **Step 3: フォーム・Mapper・Repositoryを実装する**
 
 `form/ShiftDayForm.java`：
 
@@ -1536,7 +1536,7 @@ public class ShiftDayForm {
     }
 ```
 
-- [ ] **Step 4: Serviceに登録と再表示を追加する**
+- [x] **Step 4: Serviceに登録と再表示を追加する**
 
 `service/ShiftService.java` の import に `java.util.HashSet`、`jp.bk.shiftmanager.form.ShiftDayForm`、`org.springframework.transaction.annotation.Transactional` を追加し、定数とメソッドを追加する：
 
@@ -1634,7 +1634,7 @@ public class ShiftDayForm {
     }
 ```
 
-- [ ] **Step 5: コントローラーに登録を追加する**
+- [x] **Step 5: コントローラーに登録を追加する**
 
 `controller/ShiftAdminController.java` の import に `jp.bk.shiftmanager.exception.BusinessException`、`jp.bk.shiftmanager.form.ShiftDayForm`、`org.springframework.web.bind.annotation.ModelAttribute`、`org.springframework.web.bind.annotation.PostMapping`、`org.springframework.web.servlet.mvc.support.RedirectAttributes` を追加し、次を追加する：
 
@@ -1660,19 +1660,19 @@ public class ShiftDayForm {
     }
 ```
 
-- [ ] **Step 6: テストが通ることを確認する**
+- [x] **Step 6: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=ShiftSaveTest,ShiftDayTest`
 Expected: PASS
 
-- [ ] **Step 7: ブラウザで動作を確認する**
+- [x] **Step 7: ブラウザで動作を確認する**（未実施：ユーザーに確認を依頼）
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、管理者で `/admin/shifts` を開いて次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - 行をばらばらのINで入力して「登録する」と、ポジション内がINの早い順に並び、空欄行が消える
 - 登録済みの日を開き直すと登録済みの行だけが表示され、「+ 追加する」で行を足して登録できる
 - 名前だけ選んで「登録する」とエラーが出て、入力した内容が消えていない。再表示後も「+ 追加する」・申請表示が動く
 
-- [ ] **Step 8: 全テストを実行してコミットする**
+- [x] **Step 8: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -1684,7 +1684,7 @@ git commit -m "feat: 転記の登録（空欄行の削除・二重登録の防�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 9: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-27-plan3-shifts.md
