@@ -1248,7 +1248,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - 画面：`GET /requests?month=yyyy-MM`、`POST /requests`
   - テスト：`TestData#request(User, LocalDate, String start, String end, String note)`
 
-- [ ] **Step 1: テストデータの作成メソッドを追加し、失敗するテストを書く**
+- [x] **Step 1: テストデータの作成メソッドを追加し、失敗するテストを書く**
 
 `TestData.java` にメソッドを追加する：
 
@@ -1550,12 +1550,12 @@ class RequestTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=RequestNoteTest,RequestTest`
 Expected: FAIL（コンパイルエラー：`RequestNote` などが存在しない）
 
-- [ ] **Step 3: Entity・Mapper・Repository・備考の正規化を実装する**
+- [x] **Step 3: Entity・Mapper・Repository・備考の正規化を実装する**
 
 `src/main/java/jp/bk/shiftmanager/entity/ShiftRequest.java`：
 
@@ -1680,7 +1680,7 @@ public final class RequestNote {
 }
 ```
 
-- [ ] **Step 4: Form・DTOを実装する**
+- [x] **Step 4: Form・DTOを実装する**
 
 `src/main/java/jp/bk/shiftmanager/form/RequestDayForm.java`：
 
@@ -1808,7 +1808,7 @@ public class RequestMonthView {
 }
 ```
 
-- [ ] **Step 5: Serviceを実装する**
+- [x] **Step 5: Serviceを実装する**
 
 `src/main/java/jp/bk/shiftmanager/service/RequestService.java`：
 
@@ -2017,7 +2017,7 @@ public class RequestService {
 }
 ```
 
-- [ ] **Step 6: コントローラーを実装する**
+- [x] **Step 6: コントローラーを実装する**
 
 `src/main/java/jp/bk/shiftmanager/controller/RequestController.java`：
 
@@ -2087,7 +2087,7 @@ public class RequestController {
 }
 ```
 
-- [ ] **Step 7: テンプレートを作成し、ヘッダーに「申請」を追加する**
+- [x] **Step 7: テンプレートを作成し、ヘッダーに「申請」を追加する**
 
 `src/main/resources/templates/requests/month.html`：
 
@@ -2169,12 +2169,12 @@ public class RequestController {
     <a th:href="@{/requests}" class="hover:underline">申請</a>
 ```
 
-- [ ] **Step 8: テストが通ることを確認する**
+- [x] **Step 8: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=RequestNoteTest,RequestTest`
 Expected: PASS
 
-- [ ] **Step 9: 全テストを実行してコミットする**
+- [x] **Step 9: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -2186,7 +2186,7 @@ git commit -m "feat: シフト希望の申請画面（月ごとの一括登録�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 10: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 10: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-26-plan2-requests.md
