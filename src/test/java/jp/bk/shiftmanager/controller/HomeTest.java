@@ -124,18 +124,34 @@ class HomeTest extends IntegrationTestBase {
     }
 
     @Test
-    void スタッフは7日前より前の日を押せず_INも表示しない() throws Exception {
-        published(taro, "2026-09-17", "09:00", "17:00");   // 8日前
-        published(taro, "2026-09-18", "10:00", "17:00");   // 7日前
+    void スタッフは先月まで表示でき_それより前の月へは移動できない() throws Exception {
+        published(taro, "2026-08-01", "10:00", "17:00");   // 先月1日
 
-        CalendarView calendar = view().getCalendar();
+        CalendarView september = view().getCalendar();
+        assertThat(september.isPreviousVisible()).isTrue();
+        assertThat(september.getPreviousMonth()).isEqualTo(YearMonth.of(2026, 8));
 
-        assertThat(day(calendar, "2026-09-17").isLinkable()).isFalse();
-        assertThat(day(calendar, "2026-09-17").getStartLabel()).isNull();
-        assertThat(day(calendar, "2026-09-18").isLinkable()).isTrue();
-        assertThat(day(calendar, "2026-09-18").getStartLabel()).isEqualTo("10:00");
-        // 先月（8月）は全日が7日前より前のため、前の月へは移動できない
-        assertThat(calendar.isPreviousVisible()).isFalse();
+        CalendarView august = view(taroLogin, "/?month=2026-08").getCalendar();
+        assertThat(august.getMonthLabel()).isEqualTo("2026年8月");
+        assertThat(day(august, "2026-08-01").isLinkable()).isTrue();
+        assertThat(day(august, "2026-08-01").getStartLabel()).isEqualTo("10:00");
+        assertThat(august.isPreviousVisible()).isFalse();
+
+        // 先月より前の月を直接指定しても今月を表示する
+        assertThat(view(taroLogin, "/?month=2026-07").getCalendar().getMonthLabel()).isEqualTo("2026年9月");
+    }
+
+    @Test
+    void 先は2か月後まで表示でき_それより先の月へは移動できない() throws Exception {
+        assertThat(view().getCalendar().isNextVisible()).isTrue();
+
+        CalendarView november = view(taroLogin, "/?month=2026-11").getCalendar();
+        assertThat(november.getMonthLabel()).isEqualTo("2026年11月");
+        assertThat(november.isNextVisible()).isFalse();
+
+        // 2か月より先の月を直接指定すると今月を表示する（管理者も同じ）
+        assertThat(view(taroLogin, "/?month=2026-12").getCalendar().getMonthLabel()).isEqualTo("2026年9月");
+        assertThat(view(bossLogin, "/?month=2026-12").getCalendar().getMonthLabel()).isEqualTo("2026年9月");
     }
 
     @Test
@@ -150,6 +166,11 @@ class HomeTest extends IntegrationTestBase {
         assertThat(day(calendar, "2026-09-01").getStartLabel()).isEqualTo("08:00");
         assertThat(calendar.isPreviousVisible()).isTrue();
         assertThat(calendar.getPreviousMonth()).isEqualTo(YearMonth.of(2026, 8));
+
+        // 管理者は先月より前の月も表示でき、さらに前へ移動できる
+        CalendarView july = view(bossLogin, "/?month=2026-07").getCalendar();
+        assertThat(july.getMonthLabel()).isEqualTo("2026年7月");
+        assertThat(july.isPreviousVisible()).isTrue();
     }
 
     @Test
@@ -213,7 +234,7 @@ class HomeTest extends IntegrationTestBase {
 
     @Test
     void カレンダーの月を変えても予定時間は今月と来月のまま() throws Exception {
-        assertThat(view(taroLogin, "/?month=2026-12").getThisMonthLabel()).isEqualTo("9月");
+        assertThat(view(taroLogin, "/?month=2026-11").getThisMonthLabel()).isEqualTo("9月");
     }
 
     // ---- 締切案内 ----

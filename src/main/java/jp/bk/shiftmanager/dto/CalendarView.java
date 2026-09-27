@@ -12,7 +12,9 @@ public class CalendarView {
     /** 週ごとの7マス */
     private List<List<CalendarDay>> weeks;
     private YearMonth previousMonth;
-    /** 前の月へ移動できるか（スタッフは前の月がすべて7日前より前なら移動できない） */
+    /** 前の月へ移動できるか（スタッフは先月より前へ移動できない） */
     private boolean previousVisible;
     private YearMonth nextMonth;
+    /** 次の月へ移動できるか（2か月後より先へは移動できない） */
+    private boolean nextVisible;
 }

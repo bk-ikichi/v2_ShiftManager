@@ -25,9 +25,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class DailyShiftTest extends IntegrationTestBase {
 
     private static final LocalDate OCT2 = LocalDate.of(2026, 10, 2);
-    /** 今日の7日前（スタッフが閲覧できる最も古い日） */
-    private static final LocalDate SEP18 = LocalDate.of(2026, 9, 18);
-    private static final LocalDate SEP17 = LocalDate.of(2026, 9, 17);
+    /** 前月1日（スタッフが閲覧できる最も古い日） */
+    private static final LocalDate AUG1 = LocalDate.of(2026, 8, 1);
+    private static final LocalDate JUL31 = LocalDate.of(2026, 7, 31);
 
     LoginUser admin;
     Position kitchen;
@@ -108,37 +108,37 @@ class DailyShiftTest extends IntegrationTestBase {
     }
 
     @Test
-    void スタッフは7日前まで表示でき_それより前の日へは移動できない() throws Exception {
-        data.shift(taro, kitchen, SEP18, "08:00", "17:00");
-        data.publish(SEP18);
+    void スタッフは前月1日まで表示でき_それより前の日へは移動できない() throws Exception {
+        data.shift(taro, kitchen, AUG1, "08:00", "17:00");
+        data.publish(AUG1);
 
-        DailyShiftView view = view(data.login(taro), "2026-09-18");
+        DailyShiftView view = view(data.login(taro), "2026-08-01");
 
         assertThat(view.getGroups()).hasSize(1);
         assertThat(view.isPreviousVisible()).isFalse();
-        assertThat(view(data.login(taro), "2026-09-19").isPreviousVisible()).isTrue();
+        assertThat(view(data.login(taro), "2026-08-02").isPreviousVisible()).isTrue();
     }
 
     @Test
-    void スタッフには8日以上前のシフトを表示しない() throws Exception {
-        data.shift(taro, kitchen, SEP17, "08:00", "17:00");
-        data.publish(SEP17);
+    void スタッフには前月より前のシフトを表示しない() throws Exception {
+        data.shift(taro, kitchen, JUL31, "08:00", "17:00");
+        data.publish(JUL31);
 
-        DailyShiftView view = view(data.login(taro), "2026-09-17");
+        DailyShiftView view = view(data.login(taro), "2026-07-31");
 
         assertThat(view.getGroups()).isEmpty();
-        assertThat(view.getMessage()).isEqualTo("1週間より前のシフトは表示できません");
+        assertThat(view.getMessage()).isEqualTo("先月より前のシフトは表示できません");
         assertThat(view.isPreviousVisible()).isFalse();
     }
 
     @Test
-    void 管理者は8日以上前のシフトも表示でき転記画面へのリンクが出る() throws Exception {
-        data.shift(taro, kitchen, SEP17, "08:00", "17:00");
-        data.publish(SEP17);
+    void 管理者は前月より前のシフトも表示でき転記画面へのリンクが出る() throws Exception {
+        data.shift(taro, kitchen, JUL31, "08:00", "17:00");
+        data.publish(JUL31);
 
-        MvcResult result = mvc.perform(get("/shifts").param("date", "2026-09-17").with(user(admin)))
+        MvcResult result = mvc.perform(get("/shifts").param("date", "2026-07-31").with(user(admin)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(Matchers.containsString("href=\"/admin/shifts?date=2026-09-17\"")))
+                .andExpect(content().string(Matchers.containsString("href=\"/admin/shifts?date=2026-07-31\"")))
                 .andReturn();
 
         DailyShiftView view = (DailyShiftView) result.getModelAndView().getModel().get("view");

@@ -12,7 +12,7 @@ public class CalendarDay {
     /** 表示している月の日か（前後の月の日は空欄にする） */
     private boolean inMonth;
     private boolean today;
-    /** 日別一覧へ移動できるか（公開済みの日。スタッフは7日前以降のみ） */
+    /** 日別一覧へ移動できるか（公開済みの日。スタッフは前月1日以降のみ） */
     private boolean linkable;
     /** 本人のIN（例：11:00）。本人のシフトがない・移動できない日はnull */
     private String startLabel;

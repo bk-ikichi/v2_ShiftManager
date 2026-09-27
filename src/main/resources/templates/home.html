@@ -42,7 +42,9 @@
          class="btn-secondary px-3 py-1 text-sm">&lt; 前の月</a>
       <span th:unless="${cal.previousVisible}" class="w-20"></span>
       <h2 class="font-bold" th:text="${cal.monthLabel}">2026年9月</h2>
-      <a th:href="@{/(month=${cal.nextMonth})}" class="btn-secondary px-3 py-1 text-sm">次の月 &gt;</a>
+      <a th:if="${cal.nextVisible}" th:href="@{/(month=${cal.nextMonth})}"
+         class="btn-secondary px-3 py-1 text-sm">次の月 &gt;</a>
+      <span th:unless="${cal.nextVisible}" class="w-20"></span>
     </div>
     <div class="grid grid-cols-7 gap-1 text-center text-xs">
       <span class="text-red-700">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span>

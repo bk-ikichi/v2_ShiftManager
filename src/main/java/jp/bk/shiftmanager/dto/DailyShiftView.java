@@ -13,7 +13,7 @@ public class DailyShiftView {
     private String dateLabel;
     private LocalDate previousDate;
     private String previousLabel;
-    /** 前の日へ移動できるか（スタッフは1週間より前の日へ移動できない） */
+    /** 前の日へ移動できるか（スタッフは前月1日より前の日へ移動できない） */
     private boolean previousVisible;
     private LocalDate nextDate;
     private String nextLabel;

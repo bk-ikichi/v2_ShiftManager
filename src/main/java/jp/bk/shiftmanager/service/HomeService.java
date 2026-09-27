@@ -30,6 +30,7 @@ import jp.bk.shiftmanager.repository.ShiftRequestRepository;
 import jp.bk.shiftmanager.util.Cycle;
 import jp.bk.shiftmanager.util.DateLabels;
 import jp.bk.shiftmanager.util.TimeSlots;
+import jp.bk.shiftmanager.util.ViewRange;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,9 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class HomeService {
-
-    /** スタッフが閲覧できる過去の日数（日別一覧と同じ） */
-    private static final int STAFF_PAST_DAYS = 7;
 
     private final Clock clock;
     private final ShiftChangeRepository shiftChangeRepository;
@@ -52,7 +50,7 @@ public class HomeService {
 
     /**
      * トップ画面。
-     * @param month カレンダーに表示する月（yyyy-MM）。指定がない・不正なら今月
+     * @param month カレンダーに表示する月（yyyy-MM）。指定がない・不正・範囲外なら今月
      */
     public HomeView getHome(long userId, boolean admin, String month) {
         LocalDate today = LocalDate.now(clock);
@@ -70,7 +68,7 @@ public class HomeService {
                 .findFirst()
                 .map(shift -> toMyShift(shift, today))
                 .orElse(null));
-        view.setCalendar(calendar(userId, admin, resolveMonth(month, thisMonth), today, changes));
+        view.setCalendar(calendar(userId, admin, resolveMonth(month, thisMonth, admin), today, changes));
         view.setDeadline(deadline(userId, today));
         view.setThisMonthLabel(thisMonth.getMonthValue() + "月");
         view.setThisMonthHours(hoursLabel(minutes(shifts, thisMonth)));
@@ -91,11 +89,18 @@ public class HomeService {
         shiftChangeRepository.acknowledge(userId, id);
     }
 
-    /** 画面から指定された月。指定がない・不正なら今月 */
-    private YearMonth resolveMonth(String text, YearMonth thisMonth) {
+    /**
+     * 画面から指定された月。指定がない・不正・範囲外なら今月。
+     * 範囲はスタッフが先月〜2か月後、管理者は過去を制限せず2か月後まで
+     */
+    private YearMonth resolveMonth(String text, YearMonth thisMonth, boolean admin) {
         if (text != null) {
             try {
-                return YearMonth.parse(text);
+                YearMonth month = YearMonth.parse(text);
+                if (!month.isAfter(thisMonth.plusMonths(ViewRange.FUTURE_MONTHS))
+                        && (admin || !month.isBefore(thisMonth.minusMonths(1)))) {
+                    return month;
+                }
             } catch (DateTimeParseException e) {
                 // 今月を表示する
             }
@@ -105,11 +110,11 @@ public class HomeService {
 
     /**
      * 月カレンダー（日曜始まり）。公開済みの日は日別一覧へ移動でき、本人のシフトがあればINを表示する。
-     * スタッフは今日の7日前より前の日を移動できず、INも表示しない（管理者は表示する）
+     * スタッフは前月1日より前の日を移動できず、INも表示しない（管理者は表示する）
      */
     private CalendarView calendar(long userId, boolean admin, YearMonth month, LocalDate today,
             List<ShiftChangeRow> changes) {
-        LocalDate oldest = today.minusDays(STAFF_PAST_DAYS);
+        LocalDate oldest = ViewRange.staffOldest(today);
         LocalDate first = month.atDay(1);
         LocalDate last = month.atEndOfMonth();
         Set<LocalDate> published = new HashSet<>(publishedDateRepository.findDates(first, last));
@@ -148,6 +153,7 @@ public class HomeService {
         calendar.setPreviousMonth(month.minusMonths(1));
         calendar.setPreviousVisible(admin || !month.minusMonths(1).atEndOfMonth().isBefore(oldest));
         calendar.setNextMonth(month.plusMonths(1));
+        calendar.setNextVisible(month.isBefore(YearMonth.from(today).plusMonths(ViewRange.FUTURE_MONTHS)));
         return calendar;
     }
 

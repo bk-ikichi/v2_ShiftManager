@@ -18,6 +18,7 @@ import jp.bk.shiftmanager.repository.ShiftRepository;
 import jp.bk.shiftmanager.repository.UserRepository;
 import jp.bk.shiftmanager.util.DateLabels;
 import jp.bk.shiftmanager.util.TimeSlots;
+import jp.bk.shiftmanager.util.ViewRange;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +26,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class DailyShiftService {
-
-    /** スタッフが閲覧できる過ぎた日の日数（過ぎた日は1週間後に非表示にする） */
-    private static final int STAFF_PAST_DAYS = 7;
 
     private final Clock clock;
     private final ShiftRepository shiftRepository;
@@ -49,10 +47,10 @@ public class DailyShiftService {
 
     /**
      * 1日分の一覧。公開済みの日だけ全員分を表示する。
-     * スタッフは今日の7日前より前の日を閲覧できない（管理者は閲覧できる）
+     * スタッフは前月1日より前の日を閲覧できない（管理者は閲覧できる）
      */
     public DailyShiftView getDay(LocalDate date, long viewerId, boolean admin) {
-        LocalDate oldest = LocalDate.now(clock).minusDays(STAFF_PAST_DAYS);
+        LocalDate oldest = ViewRange.staffOldest(LocalDate.now(clock));
         DailyShiftView view = new DailyShiftView();
         view.setDate(date);
         view.setDateLabel(DateLabels.monthDayWeek(date));
@@ -64,7 +62,7 @@ public class DailyShiftService {
         view.setAdmin(admin);
 
         if (!admin && date.isBefore(oldest)) {
-            view.setMessage("1週間より前のシフトは表示できません");
+            view.setMessage("先月より前のシフトは表示できません");
             return view;
         }
         if (!publishedDateRepository.isPublished(date)) {
