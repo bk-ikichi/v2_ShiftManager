@@ -629,7 +629,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - 画面：`GET /mypage`、`GET/POST /mypage/patterns`、`POST /mypage/patterns/{id}`、`POST /mypage/patterns/{id}/delete`
   - テスト：`TestData#pattern(User, String name, String start, String end): ShiftPattern`
 
-- [ ] **Step 1: テストデータの作成メソッドを追加し、失敗するテストを書く**
+- [x] **Step 1: テストデータの作成メソッドを追加し、失敗するテストを書く**
 
 `TestData.java` に追加する：
 - import：`jp.bk.shiftmanager.entity.ShiftPattern`、`jp.bk.shiftmanager.mapper.ShiftPatternMapper`、`java.time.LocalTime`
@@ -792,12 +792,12 @@ class PatternTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=PatternTest`
 Expected: FAIL（コンパイルエラー：`ShiftPattern` などが存在しない）
 
-- [ ] **Step 3: Entity・Mapper・Repositoryを実装する**
+- [x] **Step 3: Entity・Mapper・Repositoryを実装する**
 
 `src/main/java/jp/bk/shiftmanager/entity/ShiftPattern.java`：
 
@@ -897,7 +897,7 @@ public class ShiftPatternRepository {
 }
 ```
 
-- [ ] **Step 4: Form・Serviceを実装する**
+- [x] **Step 4: Form・Serviceを実装する**
 
 `src/main/java/jp/bk/shiftmanager/form/PatternForm.java`：
 
@@ -990,7 +990,7 @@ public class PatternService {
 }
 ```
 
-- [ ] **Step 5: コントローラーを実装する**
+- [x] **Step 5: コントローラーを実装する**
 
 `src/main/java/jp/bk/shiftmanager/controller/MyPageController.java`：
 
@@ -1097,7 +1097,7 @@ public class PatternController {
 }
 ```
 
-- [ ] **Step 6: テンプレートを作成し、ヘッダーを変更する**
+- [x] **Step 6: テンプレートを作成し、ヘッダーを変更する**
 
 `src/main/resources/templates/mypage/index.html`：
 
@@ -1198,12 +1198,12 @@ public class PatternController {
     <a th:href="@{/mypage}" class="hover:underline">マイページ</a>
 ```
 
-- [ ] **Step 7: テストが通ることを確認する**
+- [x] **Step 7: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=PatternTest`
 Expected: PASS（9件）
 
-- [ ] **Step 8: 全テストを実行してコミットする**
+- [x] **Step 8: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -1215,7 +1215,7 @@ git commit -m "feat: 申請パターンの管理（マイページ）
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 9: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-26-plan2-requests.md
