@@ -115,4 +115,10 @@ public class TestData {
     public void hide(Position position) {
         jdbc.update("UPDATE positions SET hidden = TRUE WHERE id = ?", position.getId());
     }
+
+    /** そのスタッフの未確認の変更をすべて確認済みにする */
+    public void acknowledgeChanges(User user) {
+        jdbc.update("UPDATE shift_changes SET acknowledged_at = now() WHERE user_id = ? AND acknowledged_at IS NULL",
+                user.getId());
+    }
 }

@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import jp.bk.shiftmanager.dto.DateOption;
 import jp.bk.shiftmanager.dto.ShiftCandidate;
@@ -27,11 +29,13 @@ import jp.bk.shiftmanager.form.ShiftDayForm;
 import jp.bk.shiftmanager.form.ShiftRowForm;
 import jp.bk.shiftmanager.repository.PositionRepository;
 import jp.bk.shiftmanager.repository.PublishedDateRepository;
+import jp.bk.shiftmanager.repository.ShiftChangeRepository;
 import jp.bk.shiftmanager.repository.ShiftRepository;
 import jp.bk.shiftmanager.repository.ShiftRequestRepository;
 import jp.bk.shiftmanager.repository.UserRepository;
 import jp.bk.shiftmanager.util.Cycle;
 import jp.bk.shiftmanager.util.DateLabels;
+import jp.bk.shiftmanager.util.ShiftChanges;
 import jp.bk.shiftmanager.util.ShiftWarnings;
 import jp.bk.shiftmanager.util.TimeRange;
 import jp.bk.shiftmanager.util.TimeSlots;
@@ -56,6 +60,7 @@ public class ShiftService {
     private final PositionRepository positionRepository;
     private final UserRepository userRepository;
     private final ShiftRequestRepository shiftRequestRepository;
+    private final ShiftChangeRepository shiftChangeRepository;
 
     /** 画面から指定された日。指定がない・不正なら今日 */
     public LocalDate resolveDate(String text) {
@@ -93,15 +98,39 @@ public class ShiftService {
 
     /**
      * 1日分のシフトを登録し直す。空欄の行は捨て、1行でも不正があれば何も保存しない。
-     * 並び順は保存せず、表示時にポジションの表示順 → INの早い順に並べる
+     * 並び順は保存せず、表示時にポジションの表示順 → INの早い順に並べる。
+     * 公開済みの日は、登録前後の差分を「変更あり」として記録する
      */
     @Transactional
     public void saveDay(ShiftDayForm form) {
         LocalDate date = parseDate(form.getDate());
+        boolean published = publishedDateRepository.isPublished(date);
+        // 下書きとして開いた画面から、確認なしにスタッフへ反映させない
+        if (published && !form.isPublished()) {
+            throw new BusinessException(
+                    "この日は画面を開いた後に公開されました。変更はすぐスタッフに表示されるため、内容を確認してもう一度登録してください");
+        }
         List<Shift> before = shiftRepository.findByDate(date);
         List<Shift> after = parseRows(date, form, before);
         shiftRepository.deleteByDate(date);
         after.forEach(shiftRepository::insert);
+        if (published) {
+            recordChanges(date, before, after);
+        }
+    }
+
+    /** 公開済みの日の変更を記録する。差分のないスタッフは記録しない */
+    private void recordChanges(LocalDate date, List<Shift> before, List<Shift> after) {
+        Map<Long, Shift> beforeByUser = before.stream()
+                .collect(Collectors.toMap(Shift::getUserId, Function.identity()));
+        Map<Long, Shift> afterByUser = after.stream()
+                .collect(Collectors.toMap(Shift::getUserId, Function.identity()));
+        Set<Long> userIds = new TreeSet<>(beforeByUser.keySet());
+        userIds.addAll(afterByUser.keySet());
+        for (Long userId : userIds) {
+            ShiftChanges.detect(beforeByUser.get(userId), afterByUser.get(userId))
+                    .ifPresent(type -> shiftChangeRepository.replaceUnacknowledged(userId, date, type));
+        }
     }
 
     /** 全行を検証してシフトにする。エラーはどのポジション・誰の行か分かるメッセージにする */

@@ -11,4 +11,6 @@ public class ShiftDayForm {
     private String date;
     /** 添字の欠番（「+ 追加する」の行など）には空の行またはnullが入る */
     private List<ShiftRowForm> rows = new ArrayList<>();
+    /** 画面を開いたときに公開済みだったか（開いた後に公開された場合の確認に使う） */
+    private boolean published;
 }

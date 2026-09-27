@@ -13,7 +13,15 @@
 
   let dirty = false;
   form.addEventListener('change', () => { dirty = true; });
-  form.addEventListener('submit', () => { dirty = false; });
+  form.addEventListener('submit', (event) => {
+    // 公開済みの日は登録前に確認する
+    if (form.dataset.published === 'true'
+      && !window.confirm('公開済みの日です。変更はすぐスタッフに表示されます。登録しますか？')) {
+      event.preventDefault();
+      return;
+    }
+    dirty = false;
+  });
 
   // ShiftWarnings と同じ判定（時刻は HH:mm のため文字列のまま比較できる）
   const warningOf = (request, start, end) => {
