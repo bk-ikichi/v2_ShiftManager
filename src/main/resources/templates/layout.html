@@ -15,6 +15,7 @@
 <header th:fragment="header" class="border-b border-stone-200 bg-white">
   <nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm">
     <a th:href="@{/}" class="font-bold">シフト管理</a>
+    <a th:href="@{/requests}" class="hover:underline">申請</a>
     <th:block sec:authorize="hasRole('ADMIN')">
       <a th:href="@{/admin/staff}" class="hover:underline">スタッフ</a>
       <a th:href="@{/admin/positions}" class="hover:underline">ポジション</a>

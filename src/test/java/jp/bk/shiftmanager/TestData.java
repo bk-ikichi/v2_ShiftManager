@@ -89,4 +89,9 @@ public class TestData {
         shiftPatternMapper.insert(pattern);
         return pattern;
     }
+
+    public void request(User user, LocalDate date, String start, String end, String note) {
+        jdbc.update("INSERT INTO shift_requests (user_id, work_date, start_time, end_time, note) "
+                + "VALUES (?, ?, ?::time, ?::time, ?)", user.getId(), date, start, end, note);
+    }
 }
