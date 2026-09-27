@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import jp.bk.shiftmanager.dto.DateOption;
 import jp.bk.shiftmanager.dto.ShiftCandidate;
 import jp.bk.shiftmanager.dto.ShiftDayView;
 import jp.bk.shiftmanager.dto.ShiftGroupView;
@@ -29,6 +30,7 @@ import jp.bk.shiftmanager.repository.PublishedDateRepository;
 import jp.bk.shiftmanager.repository.ShiftRepository;
 import jp.bk.shiftmanager.repository.ShiftRequestRepository;
 import jp.bk.shiftmanager.repository.UserRepository;
+import jp.bk.shiftmanager.util.Cycle;
 import jp.bk.shiftmanager.util.DateLabels;
 import jp.bk.shiftmanager.util.ShiftWarnings;
 import jp.bk.shiftmanager.util.TimeRange;
@@ -217,6 +219,12 @@ public class ShiftService {
         view.setGroups(groups);
         view.setRequests(requests.values().stream().map(this::toRequestInfo).toList());
         view.setNextIndex(index);
+        Cycle cycle = Cycle.of(date);
+        view.setRangeStart(cycle.start());
+        view.setRangeEnd(cycle.end());
+        view.setRangeOptions(cycle.previous().start().datesUntil(cycle.next().end().plusDays(1))
+                .map(option -> new DateOption(option, DateLabels.monthDayWeek(option)))
+                .toList());
         return view;
     }
 

@@ -25,4 +25,12 @@ public interface ShiftMapper {
 
     @Delete("DELETE FROM shifts WHERE work_date = #{date}")
     int deleteByDate(@Param("date") LocalDate date);
+
+    /** シフトが1件以上ある日（昇順） */
+    @Select("""
+            SELECT DISTINCT work_date FROM shifts
+            WHERE work_date BETWEEN #{from} AND #{to}
+            ORDER BY work_date
+            """)
+    List<LocalDate> findDates(@Param("from") LocalDate from, @Param("to") LocalDate to);
 }

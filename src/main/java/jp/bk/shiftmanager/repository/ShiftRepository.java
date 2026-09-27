@@ -25,4 +25,9 @@ public class ShiftRepository {
     public void deleteByDate(LocalDate date) {
         shiftMapper.deleteByDate(date);
     }
+
+    /** シフトが1件以上ある日（昇順） */
+    public List<LocalDate> findDates(LocalDate from, LocalDate to) {
+        return shiftMapper.findDates(from, to);
+    }
 }

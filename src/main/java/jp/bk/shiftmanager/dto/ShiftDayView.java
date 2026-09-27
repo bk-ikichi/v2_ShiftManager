@@ -21,4 +21,9 @@ public class ShiftDayView {
     private List<ShiftRequestInfo> requests;
     /** 「+ 追加する」で追加する行の最初の添字 */
     private int nextIndex;
+    /** 「○日〜○日まで公開」の選択肢（表示中の日を含むサイクルと前後1サイクル） */
+    private List<DateOption> rangeOptions;
+    /** 期間の初期値（表示中の日を含むサイクルの初日〜末日） */
+    private LocalDate rangeStart;
+    private LocalDate rangeEnd;
 }

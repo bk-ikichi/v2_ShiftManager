@@ -13,6 +13,27 @@
     <span th:if="${view.published}" class="rounded bg-green-100 px-2 py-1 text-sm text-green-800">公開済み</span>
     <span th:unless="${view.published}" class="rounded bg-stone-200 px-2 py-1 text-sm text-stone-700">下書き</span>
   </div>
+  <div th:if="${!#lists.isEmpty(view.groups)}" class="mb-4 flex flex-wrap items-center gap-2">
+    <form th:unless="${view.published}" th:action="@{/admin/shifts/publish}" method="post" data-publish-form>
+      <input type="hidden" name="date" th:value="${view.date}">
+      <button class="btn-secondary">この日を公開</button>
+    </form>
+    <form th:action="@{/admin/shifts/publish-range}" method="post" data-publish-form
+          class="flex flex-wrap items-center gap-1">
+      <input type="hidden" name="date" th:value="${view.date}">
+      <select name="from" class="input mt-0 w-auto px-1" aria-label="公開の開始日">
+        <option th:each="o : ${view.rangeOptions}" th:value="${o.value}" th:text="${o.label}"
+                th:selected="${o.value == view.rangeStart}">10/1（木）</option>
+      </select>
+      <span>〜</span>
+      <select name="to" class="input mt-0 w-auto px-1" aria-label="公開の終了日">
+        <option th:each="o : ${view.rangeOptions}" th:value="${o.value}" th:text="${o.label}"
+                th:selected="${o.value == view.rangeEnd}">10/10（土）</option>
+      </select>
+      <button class="btn-secondary">まで公開</button>
+    </form>
+    <span class="text-xs text-stone-500">公開されるのは登録済みの内容です。シフトが登録されていない日は公開されません。</span>
+  </div>
   <div th:replace="~{layout :: flash}"></div>
   <p th:if="${#lists.isEmpty(view.groups)}" class="card text-sm">
     ポジションが登録されていません。先に <a th:href="@{/admin/positions}" class="underline">ポジション</a> を登録してください。

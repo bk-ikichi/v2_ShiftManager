@@ -14,4 +14,9 @@ public class PublishedDateRepository {
     public boolean isPublished(LocalDate date) {
         return publishedDateMapper.exists(date);
     }
+
+    /** 公開済みなら何もしない */
+    public void publish(LocalDate date) {
+        publishedDateMapper.insert(date);
+    }
 }

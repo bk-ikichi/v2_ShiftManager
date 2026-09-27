@@ -1,8 +1,13 @@
 package jp.bk.shiftmanager.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 import jp.bk.shiftmanager.exception.BusinessException;
 import jp.bk.shiftmanager.form.ShiftDayForm;
+import jp.bk.shiftmanager.service.PublishService;
 import jp.bk.shiftmanager.service.ShiftService;
+import jp.bk.shiftmanager.util.DateLabels;
 import jp.bk.shiftmanager.util.TimeSlots;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -24,6 +29,7 @@ public class ShiftAdminController {
     private static final String REDIRECT_DAY = "redirect:/admin/shifts";
 
     private final ShiftService shiftService;
+    private final PublishService publishService;
 
     @GetMapping
     public String show(@RequestParam(required = false) String date, Model model) {
@@ -45,6 +51,39 @@ public class ShiftAdminController {
         }
         redirectAttributes.addFlashAttribute("message", "登録しました");
         redirectAttributes.addAttribute("date", form.getDate());
+        return REDIRECT_DAY;
+    }
+
+    @PostMapping("/publish")
+    public String publishDay(@RequestParam(required = false) String date, RedirectAttributes redirectAttributes) {
+        try {
+            publishService.publishDay(date);
+            redirectAttributes.addFlashAttribute("message", "公開しました");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        redirectAttributes.addAttribute("date", shiftService.resolveDate(date).toString());
+        return REDIRECT_DAY;
+    }
+
+    /** date は戻り先（表示中の日） */
+    @PostMapping("/publish-range")
+    public String publishRange(@RequestParam(required = false) String date,
+            @RequestParam(required = false) String from, @RequestParam(required = false) String to,
+            RedirectAttributes redirectAttributes) {
+        try {
+            List<LocalDate> skipped = publishService.publishRange(from, to);
+            String message = DateLabels.monthDay(LocalDate.parse(from)) + "〜"
+                    + DateLabels.monthDay(LocalDate.parse(to)) + "を公開しました";
+            if (!skipped.isEmpty()) {
+                message += "（シフトが登録されていないため公開しなかった日："
+                        + skipped.stream().map(DateLabels::monthDay).collect(Collectors.joining("、")) + "）";
+            }
+            redirectAttributes.addFlashAttribute("message", message);
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        redirectAttributes.addAttribute("date", shiftService.resolveDate(date).toString());
         return REDIRECT_DAY;
     }
 }

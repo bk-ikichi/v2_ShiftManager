@@ -100,4 +100,12 @@
       }
     });
   });
+  // 未保存の入力がある状態で公開するときは確認する（公開されるのは登録済みの内容だけ）
+  document.querySelectorAll('form[data-publish-form]').forEach((publishForm) => {
+    publishForm.addEventListener('submit', (event) => {
+      if (dirty && !window.confirm('保存していない入力があります。公開されるのは登録済みの内容だけです。公開しますか？')) {
+        event.preventDefault();
+      }
+    });
+  });
 })();
