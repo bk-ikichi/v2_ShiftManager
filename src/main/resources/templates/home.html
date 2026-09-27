@@ -24,6 +24,76 @@
       </li>
     </ul>
   </section>
+
+  <section>
+    <h2 class="mb-2 font-bold">次回の出勤</h2>
+    <a th:if="${view.nextShift}" th:href="@{/shifts(date=${view.nextShift.date})}" class="card block">
+      <span class="font-bold" th:text="${view.nextShift.dateLabel}">9/25（金）</span>
+      <span th:if="${view.nextShift.today}" class="ml-1 rounded bg-amber-100 px-2 text-xs text-amber-800">今日</span>
+      <span class="block text-2xl font-bold tabular-nums" th:text="${view.nextShift.timeLabel}">09:00〜17:00</span>
+      <span class="block text-sm text-stone-600" th:text="${view.nextShift.positionName}">キッチン</span>
+    </a>
+    <p th:unless="${view.nextShift}" class="card text-sm text-stone-600">公開されている次回の出勤はありません</p>
+  </section>
+
+  <section th:with="cal=${view.calendar}">
+    <div class="mb-2 flex items-center justify-between gap-2">
+      <a th:if="${cal.previousVisible}" th:href="@{/(month=${cal.previousMonth})}"
+         class="btn-secondary px-3 py-1 text-sm">&lt; 前の月</a>
+      <span th:unless="${cal.previousVisible}" class="w-20"></span>
+      <h2 class="font-bold" th:text="${cal.monthLabel}">2026年9月</h2>
+      <a th:href="@{/(month=${cal.nextMonth})}" class="btn-secondary px-3 py-1 text-sm">次の月 &gt;</a>
+    </div>
+    <div class="grid grid-cols-7 gap-1 text-center text-xs">
+      <span class="text-red-700">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span>
+      <span class="text-blue-700">土</span>
+    </div>
+    <div th:each="week : ${cal.weeks}" class="mt-1 grid grid-cols-7 gap-1 text-center">
+      <th:block th:each="d : ${week}">
+        <span th:unless="${d.inMonth}" class="min-h-14"></span>
+        <a th:if="${d.inMonth and d.linkable}" th:href="@{/shifts(date=${d.date})}"
+           class="relative flex min-h-14 flex-col items-center justify-center rounded border"
+           th:classappend="|${d.startLabel != null ? 'border-amber-400 bg-amber-50 font-bold' : 'border-stone-200 bg-white'} ${d.today ? 'ring-2 ring-stone-700' : ''}|">
+          <span class="text-sm" th:text="${d.day}">11</span>
+          <span class="text-xs tabular-nums" th:text="${d.startLabel}">11:00</span>
+          <span th:if="${d.changed}" class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+        </a>
+        <span th:if="${d.inMonth and !d.linkable}"
+              class="relative flex min-h-14 flex-col items-center justify-center rounded border border-stone-100 bg-stone-100 text-stone-400"
+              th:classappend="${d.today} ? 'ring-2 ring-stone-700'">
+          <span class="text-sm" th:text="${d.day}">12</span>
+          <span th:if="${d.changed}" class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+        </span>
+      </th:block>
+    </div>
+    <p class="mt-1 text-xs text-stone-500">色付きの日は自分の出勤日（INの時刻）です。灰色の日はまだ公開されていません</p>
+  </section>
+
+  <section>
+    <h2 class="mb-2 font-bold">申請の締切</h2>
+    <a th:href="@{/requests(month=${view.deadline.month})}" class="card block"
+       th:classappend="${view.deadline.submitted} ? '' : 'border-red-400 bg-red-50'">
+      <span th:text="|${view.deadline.cycleLabel} の締切は ${view.deadline.deadlineLabel}|">
+        10/1〜10/10 の締切は 9/26（土）</span>
+      <span th:if="${view.deadline.submitted}" class="block text-sm text-green-800">提出済み</span>
+      <span th:unless="${view.deadline.submitted}" class="block font-bold text-red-700">未提出です。申請してください</span>
+    </a>
+  </section>
+
+  <section>
+    <h2 class="mb-2 font-bold">勤務予定時間</h2>
+    <div class="card grid grid-cols-2 gap-4 text-center">
+      <div>
+        <span class="block text-sm text-stone-600" th:text="${view.thisMonthLabel}">9月</span>
+        <span class="text-xl font-bold" th:text="${view.thisMonthHours}">13時間30分</span>
+      </div>
+      <div>
+        <span class="block text-sm text-stone-600" th:text="${view.nextMonthLabel}">10月</span>
+        <span class="text-xl font-bold" th:text="${view.nextMonthHours}">4時間</span>
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-stone-500">公開済みのシフトのIN〜OUTの合計です（休憩を含みます）</p>
+  </section>
 </main>
 </body>
 </html>

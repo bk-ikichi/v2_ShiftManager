@@ -2,6 +2,7 @@ package jp.bk.shiftmanager.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import jp.bk.shiftmanager.dto.MyShiftRow;
 import jp.bk.shiftmanager.entity.Shift;
 import jp.bk.shiftmanager.mapper.ShiftMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,5 +30,10 @@ public class ShiftRepository {
     /** シフトが1件以上ある日（昇順） */
     public List<LocalDate> findDates(LocalDate from, LocalDate to) {
         return shiftMapper.findDates(from, to);
+    }
+
+    /** 本人の公開済みシフト（日付順） */
+    public List<MyShiftRow> findPublishedByUser(long userId, LocalDate from, LocalDate to) {
+        return shiftMapper.findPublishedByUser(userId, from, to);
     }
 }

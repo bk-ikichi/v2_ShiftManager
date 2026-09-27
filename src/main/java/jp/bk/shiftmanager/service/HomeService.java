@@ -1,10 +1,33 @@
 package jp.bk.shiftmanager.service;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jp.bk.shiftmanager.dto.CalendarDay;
+import jp.bk.shiftmanager.dto.CalendarView;
 import jp.bk.shiftmanager.dto.ChangeNotice;
+import jp.bk.shiftmanager.dto.DeadlineNotice;
 import jp.bk.shiftmanager.dto.HomeView;
+import jp.bk.shiftmanager.dto.MyShiftRow;
+import jp.bk.shiftmanager.dto.MyShiftView;
 import jp.bk.shiftmanager.dto.ShiftChangeRow;
 import jp.bk.shiftmanager.entity.ShiftChangeType;
+import jp.bk.shiftmanager.repository.AppSettingRepository;
+import jp.bk.shiftmanager.repository.CycleUnavailableRepository;
+import jp.bk.shiftmanager.repository.PublishedDateRepository;
 import jp.bk.shiftmanager.repository.ShiftChangeRepository;
+import jp.bk.shiftmanager.repository.ShiftRepository;
+import jp.bk.shiftmanager.repository.ShiftRequestRepository;
+import jp.bk.shiftmanager.util.Cycle;
 import jp.bk.shiftmanager.util.DateLabels;
 import jp.bk.shiftmanager.util.TimeSlots;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +39,43 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class HomeService {
 
-    private final ShiftChangeRepository shiftChangeRepository;
+    /** スタッフが閲覧できる過去の日数（日別一覧と同じ） */
+    private static final int STAFF_PAST_DAYS = 7;
 
-    public HomeView getHome(long userId) {
+    private final Clock clock;
+    private final ShiftChangeRepository shiftChangeRepository;
+    private final ShiftRepository shiftRepository;
+    private final PublishedDateRepository publishedDateRepository;
+    private final AppSettingRepository appSettingRepository;
+    private final ShiftRequestRepository shiftRequestRepository;
+    private final CycleUnavailableRepository cycleUnavailableRepository;
+
+    /**
+     * トップ画面。
+     * @param month カレンダーに表示する月（yyyy-MM）。指定がない・不正なら今月
+     */
+    public HomeView getHome(long userId, boolean admin, String month) {
+        LocalDate today = LocalDate.now(clock);
+        YearMonth thisMonth = YearMonth.from(today);
+        YearMonth nextMonth = thisMonth.plusMonths(1);
+        // 今月1日〜来月末の公開済みシフト（日付順）。次回の出勤と予定時間に使う
+        List<MyShiftRow> shifts = shiftRepository.findPublishedByUser(
+                userId, thisMonth.atDay(1), nextMonth.atEndOfMonth());
+        List<ShiftChangeRow> changes = shiftChangeRepository.findUnacknowledgedByUser(userId);
+
         HomeView view = new HomeView();
-        view.setChanges(shiftChangeRepository.findUnacknowledgedByUser(userId).stream()
-                .map(this::toNotice)
-                .toList());
+        view.setChanges(changes.stream().map(this::toNotice).toList());
+        view.setNextShift(shifts.stream()
+                .filter(shift -> !shift.getWorkDate().isBefore(today))
+                .findFirst()
+                .map(shift -> toMyShift(shift, today))
+                .orElse(null));
+        view.setCalendar(calendar(userId, admin, resolveMonth(month, thisMonth), today, changes));
+        view.setDeadline(deadline(userId, today));
+        view.setThisMonthLabel(thisMonth.getMonthValue() + "月");
+        view.setThisMonthHours(hoursLabel(minutes(shifts, thisMonth)));
+        view.setNextMonthLabel(nextMonth.getMonthValue() + "月");
+        view.setNextMonthHours(hoursLabel(minutes(shifts, nextMonth)));
         return view;
     }
 
@@ -36,6 +89,112 @@ public class HomeService {
             return;
         }
         shiftChangeRepository.acknowledge(userId, id);
+    }
+
+    /** 画面から指定された月。指定がない・不正なら今月 */
+    private YearMonth resolveMonth(String text, YearMonth thisMonth) {
+        if (text != null) {
+            try {
+                return YearMonth.parse(text);
+            } catch (DateTimeParseException e) {
+                // 今月を表示する
+            }
+        }
+        return thisMonth;
+    }
+
+    /**
+     * 月カレンダー（日曜始まり）。公開済みの日は日別一覧へ移動でき、本人のシフトがあればINを表示する。
+     * スタッフは今日の7日前より前の日を移動できず、INも表示しない（管理者は表示する）
+     */
+    private CalendarView calendar(long userId, boolean admin, YearMonth month, LocalDate today,
+            List<ShiftChangeRow> changes) {
+        LocalDate oldest = today.minusDays(STAFF_PAST_DAYS);
+        LocalDate first = month.atDay(1);
+        LocalDate last = month.atEndOfMonth();
+        Set<LocalDate> published = new HashSet<>(publishedDateRepository.findDates(first, last));
+        // 本人のシフトは1日1件（shifts_date_user_key）
+        Map<LocalDate, LocalTime> starts = shiftRepository.findPublishedByUser(userId, first, last).stream()
+                .collect(Collectors.toMap(MyShiftRow::getWorkDate, MyShiftRow::getStartTime));
+        Set<LocalDate> changed = changes.stream().map(ShiftChangeRow::getWorkDate).collect(Collectors.toSet());
+
+        List<List<CalendarDay>> weeks = new ArrayList<>();
+        // 月初を含む週の日曜日から、月末を含む週の土曜日まで（getValue は月曜=1〜日曜=7）
+        LocalDate sunday = first.minusDays(first.getDayOfWeek().getValue() % 7);
+        for (LocalDate weekStart = sunday; !weekStart.isAfter(last); weekStart = weekStart.plusWeeks(1)) {
+            List<CalendarDay> week = new ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                LocalDate date = weekStart.plusDays(i);
+                CalendarDay day = new CalendarDay();
+                day.setDate(date);
+                day.setDay(date.getDayOfMonth());
+                day.setInMonth(YearMonth.from(date).equals(month));
+                day.setToday(date.equals(today));
+                if (day.isInMonth()) {
+                    day.setLinkable(published.contains(date) && (admin || !date.isBefore(oldest)));
+                    if (day.isLinkable() && starts.containsKey(date)) {
+                        day.setStartLabel(TimeSlots.format(starts.get(date)));
+                    }
+                    day.setChanged(changed.contains(date));
+                }
+                week.add(day);
+            }
+            weeks.add(week);
+        }
+
+        CalendarView calendar = new CalendarView();
+        calendar.setMonthLabel(month.getYear() + "年" + month.getMonthValue() + "月");
+        calendar.setWeeks(weeks);
+        calendar.setPreviousMonth(month.minusMonths(1));
+        calendar.setPreviousVisible(admin || !month.minusMonths(1).atEndOfMonth().isBefore(oldest));
+        calendar.setNextMonth(month.plusMonths(1));
+        return calendar;
+    }
+
+    /**
+     * 締切前（今日が締切日以前）で最も近いサイクルの案内。
+     * 提出済みの判定は申請画面と同じ（サイクル内に申請が1日以上、または「この期間は出勤できない」にチェック）
+     */
+    private DeadlineNotice deadline(long userId, LocalDate today) {
+        int daysBefore = appSettingRepository.getDeadlineDaysBefore();
+        Cycle cycle = Cycle.of(today);
+        while (!cycle.isOpen(today, daysBefore)) {
+            cycle = cycle.next();
+        }
+        boolean submitted = !shiftRequestRepository.findByUserAndPeriod(userId, cycle.start(), cycle.end()).isEmpty()
+                || !cycleUnavailableRepository.findStarts(userId, cycle.start(), cycle.start()).isEmpty();
+
+        DeadlineNotice notice = new DeadlineNotice();
+        notice.setCycleLabel(cycle.label());
+        notice.setDeadlineLabel(DateLabels.monthDayWeek(cycle.deadline(daysBefore)));
+        notice.setSubmitted(submitted);
+        notice.setMonth(YearMonth.from(cycle.start()));
+        return notice;
+    }
+
+    /** その月のシフトの OUT − IN の合計（分） */
+    private long minutes(List<MyShiftRow> shifts, YearMonth month) {
+        return shifts.stream()
+                .filter(shift -> YearMonth.from(shift.getWorkDate()).equals(month))
+                .mapToLong(shift -> Duration.between(shift.getStartTime(), shift.getEndTime()).toMinutes())
+                .sum();
+    }
+
+    /** 例：13時間30分、4時間、0時間 */
+    private String hoursLabel(long minutes) {
+        long hours = minutes / 60;
+        long rest = minutes % 60;
+        return rest == 0 ? hours + "時間" : hours + "時間" + rest + "分";
+    }
+
+    private MyShiftView toMyShift(MyShiftRow row, LocalDate today) {
+        MyShiftView view = new MyShiftView();
+        view.setDate(row.getWorkDate());
+        view.setDateLabel(DateLabels.monthDayWeek(row.getWorkDate()));
+        view.setTimeLabel(TimeSlots.formatRange(row.getStartTime(), row.getEndTime()));
+        view.setPositionName(row.getPositionName());
+        view.setToday(row.getWorkDate().equals(today));
+        return view;
     }
 
     private ChangeNotice toNotice(ShiftChangeRow row) {

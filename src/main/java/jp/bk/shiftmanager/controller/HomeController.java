@@ -17,9 +17,11 @@ public class HomeController {
 
     private final HomeService homeService;
 
+    /** トップ画面。month（yyyy-MM）でカレンダーの月を指定する */
     @GetMapping("/")
-    public String home(@AuthenticationPrincipal LoginUser me, Model model) {
-        model.addAttribute("view", homeService.getHome(me.getId()));
+    public String home(@AuthenticationPrincipal LoginUser me, @RequestParam(required = false) String month,
+            Model model) {
+        model.addAttribute("view", homeService.getHome(me.getId(), me.isAdmin(), month));
         return "home";
     }
 
