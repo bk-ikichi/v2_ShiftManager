@@ -21,7 +21,7 @@
       <a th:href="@{/admin/settings}" class="hover:underline">設定</a>
     </th:block>
     <span class="ml-auto text-stone-500" sec:authentication="principal.name">名前</span>
-    <a th:href="@{/password}" class="hover:underline">パスワード変更</a>
+    <a th:href="@{/mypage}" class="hover:underline">マイページ</a>
     <form th:action="@{/logout}" method="post">
       <button class="hover:underline">ログアウト</button>
     </form>

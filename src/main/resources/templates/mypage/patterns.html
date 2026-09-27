@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('申請パターン')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-md px-4 py-6">
+  <h1 class="mb-4 text-lg font-bold">申請パターン</h1>
+  <div th:replace="~{layout :: flash}"></div>
+  <p class="mb-4 text-sm text-stone-600">申請画面でパターンを選ぶと、IN・OUTが自動で入力されます。</p>
+
+  <div class="card mb-6 space-y-3">
+    <div th:each="p : ${patterns}" class="border-b border-stone-100 pb-3">
+      <form th:action="@{/mypage/patterns/{id}(id=${p.id})}" method="post" class="grid grid-cols-3 gap-2">
+        <label class="col-span-3 block">
+          <span class="text-xs">名前</span>
+          <input name="name" th:value="${p.name}" maxlength="20" required class="input">
+        </label>
+        <label class="block">
+          <span class="text-xs">IN</span>
+          <select name="startTime" class="input px-1">
+            <option th:each="t : ${timeOptions}" th:value="${t}" th:text="${t}"
+                    th:selected="${t == #temporals.format(p.startTime, 'HH:mm')}"></option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-xs">OUT</span>
+          <select name="endTime" class="input px-1">
+            <option th:each="t : ${timeOptions}" th:value="${t}" th:text="${t}"
+                    th:selected="${t == #temporals.format(p.endTime, 'HH:mm')}"></option>
+          </select>
+        </label>
+        <button class="btn-secondary self-end">保存</button>
+      </form>
+      <form th:action="@{/mypage/patterns/{id}/delete(id=${p.id})}" method="post" class="mt-2 text-right">
+        <button class="btn-danger px-3 py-1 text-sm">削除</button>
+      </form>
+    </div>
+    <p th:if="${#lists.isEmpty(patterns)}" class="text-sm text-stone-500">パターンがまだありません。</p>
+  </div>
+
+  <h2 class="mb-2 font-bold">追加</h2>
+  <form th:action="@{/mypage/patterns}" method="post" class="card grid grid-cols-3 gap-2">
+    <label class="col-span-3 block">
+      <span class="text-xs">名前</span>
+      <input name="name" maxlength="20" required class="input" placeholder="例：朝">
+    </label>
+    <label class="block">
+      <span class="text-xs">IN</span>
+      <select name="startTime" class="input px-1">
+        <option th:each="t : ${timeOptions}" th:value="${t}" th:text="${t}"></option>
+      </select>
+    </label>
+    <label class="block">
+      <span class="text-xs">OUT</span>
+      <select name="endTime" class="input px-1">
+        <option th:each="t : ${timeOptions}" th:value="${t}" th:text="${t}"></option>
+      </select>
+    </label>
+    <button class="btn-primary self-end">追加する</button>
+  </form>
+</main>
+</body>
+</html>

@@ -1,10 +1,13 @@
 package jp.bk.shiftmanager;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.entity.Position;
+import jp.bk.shiftmanager.entity.ShiftPattern;
 import jp.bk.shiftmanager.entity.User;
 import jp.bk.shiftmanager.mapper.PositionMapper;
+import jp.bk.shiftmanager.mapper.ShiftPatternMapper;
 import jp.bk.shiftmanager.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
@@ -23,6 +26,7 @@ public class TestData {
     private final PasswordEncoder passwordEncoder;
     private final PositionMapper positionMapper;
     private final TestClock clock;
+    private final ShiftPatternMapper shiftPatternMapper;
 
     /** 全データを削除し、設定を初期値に戻す */
     public void reset() {
@@ -74,5 +78,15 @@ public class TestData {
     public void assignPosition(User user, Position position) {
         jdbc.update("UPDATE users SET position_id = ? WHERE id = ?", position.getId(), user.getId());
         user.setPositionId(position.getId());
+    }
+
+    public ShiftPattern pattern(User user, String name, String start, String end) {
+        ShiftPattern pattern = new ShiftPattern();
+        pattern.setUserId(user.getId());
+        pattern.setName(name);
+        pattern.setStartTime(LocalTime.parse(start));
+        pattern.setEndTime(LocalTime.parse(end));
+        shiftPatternMapper.insert(pattern);
+        return pattern;
     }
 }
