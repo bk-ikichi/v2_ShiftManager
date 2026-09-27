@@ -2216,7 +2216,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `dto.RequestCycleView#unavailable: boolean`
   - テスト：`TestData#unavailable(User, LocalDate cycleStart)`
 
-- [ ] **Step 1: テストデータの作成メソッドを追加し、失敗するテストを書く**
+- [x] **Step 1: テストデータの作成メソッドを追加し、失敗するテストを書く**
 
 `TestData.java` にメソッドを追加する：
 
@@ -2391,12 +2391,12 @@ class RequestUnavailableTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=RequestUnavailableTest`
 Expected: FAIL（コンパイルエラー：`CycleUnavailableMapper` が存在しない）
 
-- [ ] **Step 3: Mapper・Repositoryを実装する**
+- [x] **Step 3: Mapper・Repositoryを実装する**
 
 `src/main/java/jp/bk/shiftmanager/mapper/CycleUnavailableMapper.java`：
 
@@ -2483,7 +2483,7 @@ public class CycleUnavailableRepository {
     }
 ```
 
-- [ ] **Step 4: Form・DTOにチェック状態を追加する**
+- [x] **Step 4: Form・DTOにチェック状態を追加する**
 
 `form/RequestMonthForm.java` にフィールドを追加する：
 
@@ -2528,7 +2528,7 @@ public class CycleUnavailableRepository {
     }
 ```
 
-- [ ] **Step 5: Serviceを置き換える**
+- [x] **Step 5: Serviceを置き換える**
 
 `src/main/java/jp/bk/shiftmanager/service/RequestService.java` を次の内容に置き換える：
 
@@ -2780,7 +2780,7 @@ public class RequestService {
 }
 ```
 
-- [ ] **Step 6: コントローラーを置き換える（パターンを画面に渡す）**
+- [x] **Step 6: コントローラーを置き換える（パターンを画面に渡す）**
 
 `src/main/java/jp/bk/shiftmanager/controller/RequestController.java` を次の内容に置き換える：
 
@@ -2853,7 +2853,7 @@ public class RequestController {
 }
 ```
 
-- [ ] **Step 7: テンプレートを置き換え、JavaScriptを作成する**
+- [x] **Step 7: テンプレートを置き換え、JavaScriptを作成する**
 
 `src/main/resources/templates/requests/month.html` を次の内容に置き換える：
 
@@ -2992,12 +2992,12 @@ public class RequestController {
 })();
 ```
 
-- [ ] **Step 8: テストが通ることを確認する**
+- [x] **Step 8: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=RequestUnavailableTest,RequestTest`
 Expected: PASS
 
-- [ ] **Step 9: ブラウザで動作を確認する**
+- [x] **Step 9: ブラウザで動作を確認する**
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、スタッフでログインして `/requests` を開き、次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - パターンを選ぶとIN・OUTが入る
@@ -3005,7 +3005,7 @@ Expected: PASS
 - 入力を変更してから月のタブを押すと確認が出る。「登録する」では確認が出ない
 - スマートフォン幅（375px）で1行が横にはみ出さない
 
-- [ ] **Step 10: 全テストを実行してコミットする**
+- [x] **Step 10: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -3017,7 +3017,7 @@ git commit -m "feat: 「この期間は出勤できない」とパターン選�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 11: この計画ファイルのTask 4のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 11: この計画ファイルのTask 4のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-26-plan2-requests.md
