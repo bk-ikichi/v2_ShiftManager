@@ -2,6 +2,7 @@ package jp.bk.shiftmanager.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import jp.bk.shiftmanager.dto.ShiftChangeRow;
 import jp.bk.shiftmanager.entity.ShiftChange;
 import jp.bk.shiftmanager.entity.ShiftChangeType;
 import jp.bk.shiftmanager.mapper.ShiftChangeMapper;
@@ -22,5 +23,15 @@ public class ShiftChangeRepository {
 
     public List<ShiftChange> findByDate(LocalDate date) {
         return shiftChangeMapper.findByDate(date);
+    }
+
+    /** 本人の未確認の変更（日付順）。その日の現在のシフトを付ける */
+    public List<ShiftChangeRow> findUnacknowledgedByUser(long userId) {
+        return shiftChangeMapper.findUnacknowledgedByUser(userId);
+    }
+
+    /** 本人の未確認の変更を確認済みにする */
+    public void acknowledge(long userId, long id) {
+        shiftChangeMapper.acknowledge(userId, id);
     }
 }

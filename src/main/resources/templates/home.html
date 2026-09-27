@@ -3,9 +3,27 @@
 <head th:replace="~{layout :: head('トップ')}"></head>
 <body class="min-h-screen bg-stone-50 text-stone-900">
 <header th:replace="~{layout :: header}"></header>
-<main class="mx-auto max-w-5xl px-4 py-6">
+<main class="mx-auto max-w-5xl space-y-6 px-4 py-6">
   <div th:replace="~{layout :: flash}"></div>
-  <p class="card">シフト機能は準備中です。</p>
+
+  <section th:unless="${#lists.isEmpty(view.changes)}">
+    <h2 class="mb-2 font-bold text-red-700">変更あり</h2>
+    <ul class="space-y-2">
+      <li th:each="c : ${view.changes}" class="card flex items-center justify-between gap-3 border-red-300">
+        <a th:href="@{/shifts(date=${c.date})}" class="min-w-0">
+          <span class="font-bold" th:text="${c.dateLabel}">10/2（金）</span>
+          <span class="ml-1 rounded bg-red-100 px-2 text-xs text-red-800" th:text="${c.typeLabel}">変更</span>
+          <span th:if="${c.cancelled}" class="block text-sm">この日のシフトは取り消されました</span>
+          <span th:unless="${c.cancelled}" class="block text-sm tabular-nums"
+                th:text="|${c.timeLabel} ${c.positionName}|">09:00〜17:00 キッチン</span>
+        </a>
+        <form th:action="@{/changes/acknowledge}" method="post" class="shrink-0">
+          <input type="hidden" name="id" th:value="${c.id}">
+          <button class="btn-secondary px-3 py-1 text-sm">確認済み</button>
+        </form>
+      </li>
+    </ul>
+  </section>
 </main>
 </body>
 </html>

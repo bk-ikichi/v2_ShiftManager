@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.entity.Position;
+import jp.bk.shiftmanager.entity.ShiftChangeType;
 import jp.bk.shiftmanager.entity.ShiftPattern;
 import jp.bk.shiftmanager.entity.User;
 import jp.bk.shiftmanager.mapper.PositionMapper;
@@ -120,5 +121,12 @@ public class TestData {
     public void acknowledgeChanges(User user) {
         jdbc.update("UPDATE shift_changes SET acknowledged_at = now() WHERE user_id = ? AND acknowledged_at IS NULL",
                 user.getId());
+    }
+
+    /** 未確認の「変更あり」を記録する。記録のIDを返す */
+    public long change(User user, LocalDate date, ShiftChangeType type) {
+        return jdbc.queryForObject(
+                "INSERT INTO shift_changes (user_id, work_date, change_type) VALUES (?, ?, ?) RETURNING id",
+                Long.class, user.getId(), date, type.name());
     }
 }
