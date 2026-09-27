@@ -4,7 +4,7 @@
 >
 > **セッション運用：** 1セッション1 Task。Taskの最後のステップ（コミットとチェックボックス更新）が終わったら停止してユーザーに報告する。次のTaskは `/clear` 後の新しいセッションで行う。新しいセッションではこの冒頭（File Structureまで）と、未完了の最初のTaskの範囲だけを読む（`CLAUDE.md` 参照）。
 
-**Goal:** スタッフ（管理者を含む）が、公開済みの確定シフトを日別一覧とトップ画面（変更あり・次回の出勤・直近の出勤・締切案内・予定時間）で確認できるようにする。
+**Goal:** スタッフ（管理者を含む）が、公開済みの確定シフトを日別一覧とトップ画面（変更あり・次回の出勤・月カレンダー・締切案内・予定時間）で確認できるようにする。
 
 **Architecture:** Plan 1〜3 と同じく controller → service → repository → mapper の一方向。公開状態は `published_dates` の有無で決まるため、スタッフに見せるシフトの取得はすべて `published_dates` で絞る。日別一覧は `DailyShiftService`、トップ画面は `HomeService` が担当し、どちらも既存の Repository だけを呼ぶ（Service同士は呼ばない）。表示用の文字列（日付ラベル・時間帯・合計時間）はServiceでDTOに詰め、Thymeleafでは組み立てない。JavaScriptは使わない。
 
@@ -30,29 +30,34 @@
 
 ### 仕様の解釈（仕様書に明記がないため、この計画で決めたこと）
 
-- 「直近の出勤一覧」は **今日から14日間の公開済みシフトのうち、次回の出勤を除いたもの**（今後の予定）とする。過去の出勤の一覧ではない
+- 「直近の出勤一覧」は **月カレンダーに置き換える**（2026-09-28 ユーザー要望。試行として導入し、使い勝手を見て見直す）
+  - 日曜始まりの月単位。`/?month=yyyy-MM` で前後の月へ移動する（指定がない・不正なら今月）
+  - マスには日と本人のIN（例：`11:00`）だけを出し、曜日は見出し行に出す（幅375pxで7列を収めるため）。本人のシフトがある日は日別一覧の自分の行と同じ色で強調する
+  - 公開済みの日は押すとその日の日別一覧（`/shifts?date=`）へ移動する。未公開の日は灰色で押せない。本人の未確認の変更がある日には印を付ける
+  - スタッフは今日の7日前より前の日を押せず、INも出さない（日別一覧と同じ制限）。管理者は押せる
 - 「次回の出勤」は **今日以降で最も早い公開済みシフト**（今日のシフトは時刻が過ぎていても次回として表示し「今日」の印を付ける）。探す範囲は来月末まで
 - 「申請締切の案内」は **締切前（今日が締切日以前）で最も近いサイクル1つ** を表示する
 - 日別一覧は管理者にも公開済みの日だけを表示する（下書きは転記画面で見る）。管理者には転記画面へのリンクを出す
 
 ## Review Focus
 
-1. 下書き（未公開）の日のシフト：日別一覧・次回の出勤・直近の出勤・予定時間のどこにも出ない → Task 1・Task 3でテスト
+1. 下書き（未公開）の日のシフト：日別一覧・次回の出勤・カレンダー・予定時間のどこにも出ない → Task 1・Task 3でテスト
 2. スタッフが日別一覧のURLに8日以上前の日付・不正な日付を直接入れる：8日以上前は表示せず案内を出す、不正な日付は今日を表示する（500エラーにしない）。管理者は8日以上前も表示できる → Task 1でテスト
 3. 公開後に無効化したスタッフ・非表示にしたポジションのシフト：日別一覧から消えずに表示される → Task 1でテスト
 4. 「確認済み」に他人の変更ID・確認済みの変更ID・数値でないID・存在しないID・IDなしを送る：何も変わらずトップへ戻る（500エラーにしない） → Task 2でテスト
-5. 境界の日付：今日が締切日当日なら同じサイクルを案内し、翌日は次のサイクルを案内する。予定時間は月末（9/30・10/31）を含み、前月末・翌々月1日を含まない。直近の出勤は14日目を含み15日目を含まない → Task 3でテスト
+5. 境界の日付：今日が締切日当日なら同じサイクルを案内し、翌日は次のサイクルを案内する。予定時間は月末（9/30・10/31）を含み、前月末・翌々月1日を含まない。カレンダーはスタッフに7日前を表示し8日前を表示しない。カレンダーの月に不正な値を入れても今月を表示する（500エラーにしない） → Task 3でテスト
 
 ## File Structure
 
 ```
 src/main/java/jp/bk/shiftmanager/
-  mapper/      ShiftMapper に findPublishedByUser、ShiftChangeMapper に findUnacknowledgedByUser・acknowledge を追加
-  repository/  ShiftRepository・ShiftChangeRepository に同名メソッドを追加
+  mapper/      ShiftMapper に findPublishedByUser、ShiftChangeMapper に findUnacknowledgedByUser・acknowledge、
+               PublishedDateMapper に findBetween を追加
+  repository/  ShiftRepository・ShiftChangeRepository に同名メソッド、PublishedDateRepository に findDates を追加
   service/     DailyShiftService（日別一覧）, HomeService（トップ画面・確認済み）
   controller/  DailyShiftController（/shifts）, HomeController（/ と /changes/acknowledge に置き換え）
   dto/         DailyShiftView, DailyShiftGroup, DailyShiftRow,
-               HomeView, ChangeNotice, ShiftChangeRow, MyShiftRow, MyShiftView, DeadlineNotice
+               HomeView, ChangeNotice, ShiftChangeRow, MyShiftRow, MyShiftView, CalendarDay, CalendarView, DeadlineNotice
   util/        TimeSlots に formatRange を追加
 src/main/resources/templates/
   layout.html      ヘッダーに「シフト」を追加
@@ -1049,21 +1054,27 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 3: トップ画面の次回の出勤・直近の出勤・締切案内・予定時間
+### Task 3: トップ画面の次回の出勤・カレンダー・締切案内・予定時間
+
+> 2026-09-28 ユーザー要望により「直近の出勤一覧」を月カレンダーに置き換えた（仕様の解釈を参照）
 
 **Files:**
-- Create: `dto/MyShiftRow.java`、`dto/MyShiftView.java`、`dto/DeadlineNotice.java`
+- Create: `dto/MyShiftRow.java`、`dto/MyShiftView.java`、`dto/CalendarDay.java`、`dto/CalendarView.java`、`dto/DeadlineNotice.java`
 - Modify: `mapper/ShiftMapper.java`（`findPublishedByUser`）、`repository/ShiftRepository.java`（同名メソッド）
-- Modify: `dto/HomeView.java`（項目追加）、`service/HomeService.java`（`getHome` に追加）、`src/main/resources/templates/home.html`（セクション追加）
+- Modify: `mapper/PublishedDateMapper.java`（`findBetween`）、`repository/PublishedDateRepository.java`（`findDates`）
+- Modify: `dto/HomeView.java`（項目追加）、`service/HomeService.java`（`getHome` の引数と項目を追加）、`controller/HomeController.java`（`month` パラメータ）、`src/main/resources/templates/home.html`（セクション追加）
 - Test: `controller/HomeTest.java`
 
 **Interfaces:**
-- Consumes: Task 2 の `HomeService#getHome`・`HomeView#changes`・`home.html`、Task 1 の `TimeSlots.formatRange`・`GET /shifts?date=`、`util.Cycle`（`of`・`next`・`isOpen`・`deadline`・`label`）、`AppSettingRepository#getDeadlineDaysBefore()`、`ShiftRequestRepository#findByUserAndPeriod(long, LocalDate, LocalDate)`、`CycleUnavailableRepository#findStarts(long, LocalDate, LocalDate)`、`GET /requests?month=yyyy-MM`、`TestData#shift`・`#publish`・`#request`・`#unavailable`・`#today`
+- Consumes: Task 2 の `HomeService#getHome`・`HomeView#changes`・`ShiftChangeRepository#findUnacknowledgedByUser`・`home.html`、Task 1 の `TimeSlots.formatRange`・`GET /shifts?date=`、`TimeSlots.format`、`util.Cycle`（`of`・`next`・`isOpen`・`deadline`・`label`）、`AppSettingRepository#getDeadlineDaysBefore()`、`ShiftRequestRepository#findByUserAndPeriod(long, LocalDate, LocalDate)`、`CycleUnavailableRepository#findStarts(long, LocalDate, LocalDate)`、`GET /requests?month=yyyy-MM`、`TestData#shift`・`#publish`・`#request`・`#unavailable`・`#today`・`#change`
 - Produces:
   - `ShiftMapper#findPublishedByUser(long userId, LocalDate from, LocalDate to): List<MyShiftRow>`、`ShiftRepository#findPublishedByUser`（同じ）
-  - `HomeView` に `nextShift: MyShiftView`（なければnull）・`upcoming: List<MyShiftView>`・`deadline: DeadlineNotice`・`thisMonthLabel`・`thisMonthHours`・`nextMonthLabel`・`nextMonthHours`
+  - `PublishedDateMapper#findBetween(LocalDate from, LocalDate to): List<LocalDate>`、`PublishedDateRepository#findDates`（同じ）
+  - `HomeService#getHome(long userId, boolean admin, String month): HomeView`（Task 2 の `getHome(long)` を置き換える）
+  - `GET /?month=yyyy-MM`（指定がない・不正なら今月）
+  - `HomeView` に `nextShift: MyShiftView`（なければnull）・`calendar: CalendarView`・`deadline: DeadlineNotice`・`thisMonthLabel`・`thisMonthHours`・`nextMonthLabel`・`nextMonthHours`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/HomeTest.java`：
 
@@ -1078,54 +1089,68 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
 import jp.bk.shiftmanager.IntegrationTestBase;
 import jp.bk.shiftmanager.auth.LoginUser;
+import jp.bk.shiftmanager.dto.CalendarDay;
+import jp.bk.shiftmanager.dto.CalendarView;
 import jp.bk.shiftmanager.dto.DeadlineNotice;
 import jp.bk.shiftmanager.dto.HomeView;
 import jp.bk.shiftmanager.dto.MyShiftView;
 import jp.bk.shiftmanager.entity.Position;
+import jp.bk.shiftmanager.entity.ShiftChangeType;
 import jp.bk.shiftmanager.entity.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MvcResult;
 
-/** トップ画面の次回の出勤・直近の出勤・締切案内・予定時間（今日は2026-09-25（金）、締切は5日前） */
+/** トップ画面の次回の出勤・カレンダー・締切案内・予定時間（今日は2026-09-25（金）、締切は5日前） */
 class HomeTest extends IntegrationTestBase {
 
     Position kitchen;
     User taro;
     User hanako;
+    User boss;
     LoginUser taroLogin;
+    LoginUser bossLogin;
 
     @BeforeEach
     void setUp() {
         kitchen = data.position("キッチン", 1);
         taro = data.user("taro", "山田太郎", false);
         hanako = data.user("hanako", "佐藤花子", false);
+        boss = data.user("boss", "店長", true);
         taroLogin = data.login(taro);
+        bossLogin = data.login(boss);
     }
 
+    // ---- 次回の出勤 ----
+
     @Test
-    void 次回の出勤と直近の出勤は公開済みのシフトを今日から14日間表示する() throws Exception {
+    void 次回の出勤は今日以降で最も早い公開済みシフト() throws Exception {
         published(taro, "2026-09-24", "09:00", "17:00");   // 過ぎた日
         published(taro, "2026-09-25", "17:00", "22:00");   // 今日
         data.shift(taro, kitchen, LocalDate.parse("2026-09-27"), "09:00", "17:00"); // 下書き
         published(taro, "2026-09-28", "09:00", "13:00");
-        published(taro, "2026-10-08", "10:00", "15:00");   // 14日目
-        published(taro, "2026-10-09", "10:00", "15:00");   // 15日目
         published(hanako, "2026-09-26", "09:00", "17:00"); // 他のスタッフ
 
-        HomeView view = view();
+        MyShiftView next = view().getNextShift();
 
-        MyShiftView next = view.getNextShift();
         assertThat(next.getDateLabel()).isEqualTo("9/25（金）");
         assertThat(next.isToday()).isTrue();
         assertThat(next.getTimeLabel()).isEqualTo("17:00〜22:00");
         assertThat(next.getPositionName()).isEqualTo("キッチン");
-        assertThat(view.getUpcoming()).extracting(MyShiftView::getDateLabel)
-                .containsExactly("9/28（月）", "10/8（木）");
-        assertThat(view.getUpcoming()).noneMatch(MyShiftView::isToday);
+    }
+
+    @Test
+    void 次回の出勤は来月のシフトからも探す() throws Exception {
+        published(taro, "2026-10-20", "10:00", "15:00");
+
+        MyShiftView next = view().getNextShift();
+
+        assertThat(next.getDateLabel()).isEqualTo("10/20（火）");
+        assertThat(next.isToday()).isFalse();
     }
 
     @Test
@@ -1136,10 +1161,110 @@ class HomeTest extends IntegrationTestBase {
                 .andExpect(content().string(Matchers.containsString("公開されている次回の出勤はありません")))
                 .andReturn();
 
-        HomeView view = (HomeView) result.getModelAndView().getModel().get("view");
-        assertThat(view.getNextShift()).isNull();
-        assertThat(view.getUpcoming()).isEmpty();
+        assertThat(((HomeView) result.getModelAndView().getModel().get("view")).getNextShift()).isNull();
     }
+
+    // ---- カレンダー ----
+
+    @Test
+    void カレンダーは日曜始まりで今月を表示し_前後の月の日は月外とする() throws Exception {
+        CalendarView calendar = view().getCalendar();
+
+        assertThat(calendar.getMonthLabel()).isEqualTo("2026年9月");
+        // 8/30（日）〜10/3（土）の5週
+        assertThat(calendar.getWeeks()).hasSize(5).allSatisfy(week -> assertThat(week).hasSize(7));
+        CalendarDay first = calendar.getWeeks().get(0).get(0);
+        assertThat(first.getDate()).isEqualTo(LocalDate.parse("2026-08-30"));
+        assertThat(first.isInMonth()).isFalse();
+        assertThat(calendar.getWeeks().get(0).get(2).getDate()).isEqualTo(LocalDate.parse("2026-09-01"));
+        assertThat(calendar.getWeeks().get(4).get(6).getDate()).isEqualTo(LocalDate.parse("2026-10-03"));
+        assertThat(day(calendar, "2026-09-25").isToday()).isTrue();
+        assertThat(day(calendar, "2026-09-25").getDay()).isEqualTo(25);
+    }
+
+    @Test
+    void 自分の公開済みシフトの日はINを表示し_下書きの日は押せない() throws Exception {
+        published(taro, "2026-09-28", "11:00", "17:00");
+        data.shift(taro, kitchen, LocalDate.parse("2026-09-27"), "09:00", "17:00"); // 下書き
+        published(hanako, "2026-09-26", "09:00", "17:00"); // 他のスタッフだけの公開済みの日
+
+        MvcResult result = mvc.perform(get("/").with(user(taroLogin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("href=\"/shifts?date=2026-09-28\"")))
+                .andExpect(content().string(Matchers.containsString("href=\"/shifts?date=2026-09-26\"")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("/shifts?date=2026-09-27"))))
+                .andReturn();
+
+        CalendarView calendar = ((HomeView) result.getModelAndView().getModel().get("view")).getCalendar();
+        assertThat(day(calendar, "2026-09-28").getStartLabel()).isEqualTo("11:00");
+        assertThat(day(calendar, "2026-09-28").isLinkable()).isTrue();
+        assertThat(day(calendar, "2026-09-27").getStartLabel()).isNull();
+        assertThat(day(calendar, "2026-09-27").isLinkable()).isFalse();
+        assertThat(day(calendar, "2026-09-26").getStartLabel()).isNull();
+        assertThat(day(calendar, "2026-09-26").isLinkable()).isTrue();
+    }
+
+    @Test
+    void スタッフは7日前より前の日を押せず_INも表示しない() throws Exception {
+        published(taro, "2026-09-17", "09:00", "17:00");   // 8日前
+        published(taro, "2026-09-18", "10:00", "17:00");   // 7日前
+
+        CalendarView calendar = view().getCalendar();
+
+        assertThat(day(calendar, "2026-09-17").isLinkable()).isFalse();
+        assertThat(day(calendar, "2026-09-17").getStartLabel()).isNull();
+        assertThat(day(calendar, "2026-09-18").isLinkable()).isTrue();
+        assertThat(day(calendar, "2026-09-18").getStartLabel()).isEqualTo("10:00");
+        // 先月（8月）は全日が7日前より前のため、前の月へは移動できない
+        assertThat(calendar.isPreviousVisible()).isFalse();
+    }
+
+    @Test
+    void 管理者は過去の日も押せて前の月へ移動できる() throws Exception {
+        LocalDate sep1 = LocalDate.parse("2026-09-01");
+        data.shift(boss, kitchen, sep1, "08:00", "12:00");
+        data.publish(sep1);
+
+        CalendarView calendar = view(bossLogin, "/").getCalendar();
+
+        assertThat(day(calendar, "2026-09-01").isLinkable()).isTrue();
+        assertThat(day(calendar, "2026-09-01").getStartLabel()).isEqualTo("08:00");
+        assertThat(calendar.isPreviousVisible()).isTrue();
+        assertThat(calendar.getPreviousMonth()).isEqualTo(YearMonth.of(2026, 8));
+    }
+
+    @Test
+    void 月を指定して表示でき_不正な指定は今月を表示する() throws Exception {
+        published(taro, "2026-10-31", "08:00", "12:00");
+
+        CalendarView october = view(taroLogin, "/?month=2026-10").getCalendar();
+        assertThat(october.getMonthLabel()).isEqualTo("2026年10月");
+        assertThat(day(october, "2026-10-31").getStartLabel()).isEqualTo("08:00");
+        assertThat(october.isPreviousVisible()).isTrue();
+        assertThat(october.getPreviousMonth()).isEqualTo(YearMonth.of(2026, 9));
+        assertThat(october.getNextMonth()).isEqualTo(YearMonth.of(2026, 11));
+
+        for (String month : List.of("abc", "2026-13", "")) {
+            assertThat(view(taroLogin, "/?month=" + month).getCalendar().getMonthLabel()).isEqualTo("2026年9月");
+        }
+    }
+
+    @Test
+    void 未確認の変更がある日に印を付ける() throws Exception {
+        published(taro, "2026-09-28", "09:00", "13:00");
+        data.publish(LocalDate.parse("2026-09-29"));
+        data.change(taro, LocalDate.parse("2026-09-28"), ShiftChangeType.UPDATED);
+        data.change(taro, LocalDate.parse("2026-09-29"), ShiftChangeType.CANCELLED);
+
+        CalendarView calendar = view().getCalendar();
+
+        assertThat(day(calendar, "2026-09-28").isChanged()).isTrue();
+        assertThat(day(calendar, "2026-09-29").isChanged()).isTrue();
+        assertThat(day(calendar, "2026-09-29").getStartLabel()).isNull();
+        assertThat(day(calendar, "2026-09-30").isChanged()).isFalse();
+    }
+
+    // ---- 予定時間 ----
 
     @Test
     void 予定時間は今月と来月の公開済みシフトのOUTからINを引いた合計() throws Exception {
@@ -1166,6 +1291,13 @@ class HomeTest extends IntegrationTestBase {
         assertThat(view.getThisMonthHours()).isEqualTo("0時間");
         assertThat(view.getNextMonthHours()).isEqualTo("0時間");
     }
+
+    @Test
+    void カレンダーの月を変えても予定時間は今月と来月のまま() throws Exception {
+        assertThat(view(taroLogin, "/?month=2026-12").getThisMonthLabel()).isEqualTo("9月");
+    }
+
+    // ---- 締切案内 ----
 
     @Test
     void 締切前で最も近いサイクルを案内し_未提出なら強調する() throws Exception {
@@ -1216,19 +1348,33 @@ class HomeTest extends IntegrationTestBase {
         data.publish(day);
     }
 
+    /** カレンダーからその日のマスを取り出す */
+    private CalendarDay day(CalendarView calendar, String date) {
+        LocalDate target = LocalDate.parse(date);
+        return calendar.getWeeks().stream()
+                .flatMap(List::stream)
+                .filter(day -> day.getDate().equals(target))
+                .findFirst()
+                .orElseThrow();
+    }
+
     private HomeView view() throws Exception {
-        MvcResult result = mvc.perform(get("/").with(user(taroLogin))).andExpect(status().isOk()).andReturn();
+        return view(taroLogin, "/");
+    }
+
+    private HomeView view(LoginUser login, String url) throws Exception {
+        MvcResult result = mvc.perform(get(url).with(user(login))).andExpect(status().isOk()).andReturn();
         return (HomeView) result.getModelAndView().getModel().get("view");
     }
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=HomeTest`
-Expected: FAIL（コンパイルエラー：`MyShiftView`・`DeadlineNotice`・`HomeView#getNextShift` 等が存在しない）
+Expected: FAIL（コンパイルエラー：`MyShiftView`・`CalendarView`・`CalendarDay`・`DeadlineNotice`・`HomeView#getNextShift` 等が存在しない）
 
-- [ ] **Step 3: DTOを作り、`HomeView` に項目を追加する**
+- [x] **Step 3: DTOを作り、`HomeView` に項目を追加する**
 
 `src/main/java/jp/bk/shiftmanager/dto/MyShiftRow.java`：
 
@@ -1257,7 +1403,7 @@ package jp.bk.shiftmanager.dto;
 import java.time.LocalDate;
 import lombok.Data;
 
-/** トップ画面の出勤1件 */
+/** トップ画面の次回の出勤 */
 @Data
 public class MyShiftView {
     private LocalDate date;
@@ -1268,6 +1414,55 @@ public class MyShiftView {
     private String positionName;
     /** 今日のシフトか */
     private boolean today;
+}
+```
+
+`src/main/java/jp/bk/shiftmanager/dto/CalendarDay.java`：
+
+```java
+package jp.bk.shiftmanager.dto;
+
+import java.time.LocalDate;
+import lombok.Data;
+
+/** トップ画面のカレンダーの1マス */
+@Data
+public class CalendarDay {
+    private LocalDate date;
+    /** 日（例：25） */
+    private int day;
+    /** 表示している月の日か（前後の月の日は空欄にする） */
+    private boolean inMonth;
+    private boolean today;
+    /** 日別一覧へ移動できるか（公開済みの日。スタッフは7日前以降のみ） */
+    private boolean linkable;
+    /** 本人のIN（例：11:00）。本人のシフトがない・移動できない日はnull */
+    private String startLabel;
+    /** 本人の未確認の変更がある日か */
+    private boolean changed;
+}
+```
+
+`src/main/java/jp/bk/shiftmanager/dto/CalendarView.java`：
+
+```java
+package jp.bk.shiftmanager.dto;
+
+import java.time.YearMonth;
+import java.util.List;
+import lombok.Data;
+
+/** トップ画面の月カレンダー（日曜始まり） */
+@Data
+public class CalendarView {
+    /** 例：2026年9月 */
+    private String monthLabel;
+    /** 週ごとの7マス */
+    private List<List<CalendarDay>> weeks;
+    private YearMonth previousMonth;
+    /** 前の月へ移動できるか（スタッフは前の月がすべて7日前より前なら移動できない） */
+    private boolean previousVisible;
+    private YearMonth nextMonth;
 }
 ```
 
@@ -1305,10 +1500,10 @@ import lombok.Data;
 public class HomeView {
     /** 未確認の「変更あり」（日付順） */
     private List<ChangeNotice> changes;
-    /** 今日以降で最も早い公開済みシフト（なければnull） */
+    /** 今日以降で最も早い公開済みシフト（来月末まで。なければnull） */
     private MyShiftView nextShift;
-    /** 今日から14日間の公開済みシフト（次回の出勤を除く。日付順） */
-    private List<MyShiftView> upcoming;
+    /** 月カレンダー */
+    private CalendarView calendar;
     /** 締切前で最も近いサイクルの案内 */
     private DeadlineNotice deadline;
     /** 例：9月 */
@@ -1320,7 +1515,7 @@ public class HomeView {
 }
 ```
 
-- [ ] **Step 4: Mapper・Repositoryに本人の公開済みシフトの取得を追加する**
+- [x] **Step 4: Mapper・Repositoryに本人の公開済みシフトと公開日の取得を追加する**
 
 `src/main/java/jp/bk/shiftmanager/mapper/ShiftMapper.java` に `import jp.bk.shiftmanager.dto.MyShiftRow;` を追加し、クラス末尾に追加する：
 
@@ -1347,7 +1542,24 @@ public class HomeView {
     }
 ```
 
-- [ ] **Step 5: `HomeService` に次回の出勤・直近の出勤・締切案内・予定時間を追加する**
+`src/main/java/jp/bk/shiftmanager/mapper/PublishedDateMapper.java` に `import java.util.List;` を追加し、クラス末尾に追加する：
+
+```java
+    /** 期間内の公開済みの日（日付順） */
+    @Select("SELECT work_date FROM published_dates WHERE work_date BETWEEN #{from} AND #{to} ORDER BY work_date")
+    List<LocalDate> findBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
+```
+
+`src/main/java/jp/bk/shiftmanager/repository/PublishedDateRepository.java` に `import java.util.List;` を追加し、クラス末尾に追加する：
+
+```java
+    /** 期間内の公開済みの日（日付順） */
+    public List<LocalDate> findDates(LocalDate from, LocalDate to) {
+        return publishedDateMapper.findBetween(from, to);
+    }
+```
+
+- [x] **Step 5: `HomeService` に次回の出勤・カレンダー・締切案内・予定時間を追加する**
 
 `src/main/java/jp/bk/shiftmanager/service/HomeService.java` を置き換える（`acknowledge`・`toNotice`・`typeLabel` は Task 2 のまま）：
 
@@ -1357,8 +1569,17 @@ package jp.bk.shiftmanager.service;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jp.bk.shiftmanager.dto.CalendarDay;
+import jp.bk.shiftmanager.dto.CalendarView;
 import jp.bk.shiftmanager.dto.ChangeNotice;
 import jp.bk.shiftmanager.dto.DeadlineNotice;
 import jp.bk.shiftmanager.dto.HomeView;
@@ -1368,6 +1589,7 @@ import jp.bk.shiftmanager.dto.ShiftChangeRow;
 import jp.bk.shiftmanager.entity.ShiftChangeType;
 import jp.bk.shiftmanager.repository.AppSettingRepository;
 import jp.bk.shiftmanager.repository.CycleUnavailableRepository;
+import jp.bk.shiftmanager.repository.PublishedDateRepository;
 import jp.bk.shiftmanager.repository.ShiftChangeRepository;
 import jp.bk.shiftmanager.repository.ShiftRepository;
 import jp.bk.shiftmanager.repository.ShiftRequestRepository;
@@ -1383,42 +1605,39 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class HomeService {
 
-    /** 直近の出勤一覧に出す期間（今日を含む日数） */
-    private static final int UPCOMING_DAYS = 14;
+    /** スタッフが閲覧できる過去の日数（日別一覧と同じ） */
+    private static final int STAFF_PAST_DAYS = 7;
 
     private final Clock clock;
     private final ShiftChangeRepository shiftChangeRepository;
     private final ShiftRepository shiftRepository;
+    private final PublishedDateRepository publishedDateRepository;
     private final AppSettingRepository appSettingRepository;
     private final ShiftRequestRepository shiftRequestRepository;
     private final CycleUnavailableRepository cycleUnavailableRepository;
 
-    public HomeView getHome(long userId) {
+    /**
+     * トップ画面。
+     * @param month カレンダーに表示する月（yyyy-MM）。指定がない・不正なら今月
+     */
+    public HomeView getHome(long userId, boolean admin, String month) {
         LocalDate today = LocalDate.now(clock);
         YearMonth thisMonth = YearMonth.from(today);
         YearMonth nextMonth = thisMonth.plusMonths(1);
-        // 今月1日〜来月末の公開済みシフト（日付順）。次回の出勤もこの範囲から探す
+        // 今月1日〜来月末の公開済みシフト（日付順）。次回の出勤と予定時間に使う
         List<MyShiftRow> shifts = shiftRepository.findPublishedByUser(
                 userId, thisMonth.atDay(1), nextMonth.atEndOfMonth());
+        List<ShiftChangeRow> changes = shiftChangeRepository.findUnacknowledgedByUser(userId);
 
         HomeView view = new HomeView();
-        view.setChanges(shiftChangeRepository.findUnacknowledgedByUser(userId).stream()
-                .map(this::toNotice)
-                .toList());
-
-        List<MyShiftView> future = shifts.stream()
+        view.setChanges(changes.stream().map(this::toNotice).toList());
+        view.setNextShift(shifts.stream()
                 .filter(shift -> !shift.getWorkDate().isBefore(today))
+                .findFirst()
                 .map(shift -> toMyShift(shift, today))
-                .toList();
-        view.setNextShift(future.isEmpty() ? null : future.get(0));
-        LocalDate upcomingEnd = today.plusDays(UPCOMING_DAYS - 1);
-        view.setUpcoming(future.stream()
-                .skip(1)
-                .filter(shift -> !shift.getDate().isAfter(upcomingEnd))
-                .toList());
-
+                .orElse(null));
+        view.setCalendar(calendar(userId, admin, resolveMonth(month, thisMonth), today, changes));
         view.setDeadline(deadline(userId, today));
-
         view.setThisMonthLabel(thisMonth.getMonthValue() + "月");
         view.setThisMonthHours(hoursLabel(minutes(shifts, thisMonth)));
         view.setNextMonthLabel(nextMonth.getMonthValue() + "月");
@@ -1436,6 +1655,66 @@ public class HomeService {
             return;
         }
         shiftChangeRepository.acknowledge(userId, id);
+    }
+
+    /** 画面から指定された月。指定がない・不正なら今月 */
+    private YearMonth resolveMonth(String text, YearMonth thisMonth) {
+        if (text != null) {
+            try {
+                return YearMonth.parse(text);
+            } catch (DateTimeParseException e) {
+                // 今月を表示する
+            }
+        }
+        return thisMonth;
+    }
+
+    /**
+     * 月カレンダー（日曜始まり）。公開済みの日は日別一覧へ移動でき、本人のシフトがあればINを表示する。
+     * スタッフは今日の7日前より前の日を移動できず、INも表示しない（管理者は表示する）
+     */
+    private CalendarView calendar(long userId, boolean admin, YearMonth month, LocalDate today,
+            List<ShiftChangeRow> changes) {
+        LocalDate oldest = today.minusDays(STAFF_PAST_DAYS);
+        LocalDate first = month.atDay(1);
+        LocalDate last = month.atEndOfMonth();
+        Set<LocalDate> published = new HashSet<>(publishedDateRepository.findDates(first, last));
+        // 本人のシフトは1日1件（shifts_date_user_key）
+        Map<LocalDate, LocalTime> starts = shiftRepository.findPublishedByUser(userId, first, last).stream()
+                .collect(Collectors.toMap(MyShiftRow::getWorkDate, MyShiftRow::getStartTime));
+        Set<LocalDate> changed = changes.stream().map(ShiftChangeRow::getWorkDate).collect(Collectors.toSet());
+
+        List<List<CalendarDay>> weeks = new ArrayList<>();
+        // 月初を含む週の日曜日から、月末を含む週の土曜日まで（getValue は月曜=1〜日曜=7）
+        LocalDate sunday = first.minusDays(first.getDayOfWeek().getValue() % 7);
+        for (LocalDate weekStart = sunday; !weekStart.isAfter(last); weekStart = weekStart.plusWeeks(1)) {
+            List<CalendarDay> week = new ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                LocalDate date = weekStart.plusDays(i);
+                CalendarDay day = new CalendarDay();
+                day.setDate(date);
+                day.setDay(date.getDayOfMonth());
+                day.setInMonth(YearMonth.from(date).equals(month));
+                day.setToday(date.equals(today));
+                if (day.isInMonth()) {
+                    day.setLinkable(published.contains(date) && (admin || !date.isBefore(oldest)));
+                    if (day.isLinkable() && starts.containsKey(date)) {
+                        day.setStartLabel(TimeSlots.format(starts.get(date)));
+                    }
+                    day.setChanged(changed.contains(date));
+                }
+                week.add(day);
+            }
+            weeks.add(week);
+        }
+
+        CalendarView calendar = new CalendarView();
+        calendar.setMonthLabel(month.getYear() + "年" + month.getMonthValue() + "月");
+        calendar.setWeeks(weeks);
+        calendar.setPreviousMonth(month.minusMonths(1));
+        calendar.setPreviousVisible(admin || !month.minusMonths(1).atEndOfMonth().isBefore(oldest));
+        calendar.setNextMonth(month.plusMonths(1));
+        return calendar;
     }
 
     /**
@@ -1509,9 +1788,24 @@ public class HomeService {
 }
 ```
 
-- [ ] **Step 6: `home.html` にセクションを追加する**
+- [x] **Step 6: `HomeController` に `month` パラメータを追加する**
 
-`src/main/resources/templates/home.html` の「変更あり」の `</section>` の後（`</main>` の前）に追加する：
+`src/main/java/jp/bk/shiftmanager/controller/HomeController.java` の `home` を置き換える：
+
+```java
+    /** トップ画面。month（yyyy-MM）でカレンダーの月を指定する */
+    @GetMapping("/")
+    public String home(@AuthenticationPrincipal LoginUser me, @RequestParam(required = false) String month,
+            Model model) {
+        model.addAttribute("view", homeService.getHome(me.getId(), me.isAdmin(), month));
+        return "home";
+    }
+```
+
+- [x] **Step 7: `home.html` にセクションを追加する**
+
+`src/main/resources/templates/home.html` の「変更あり」の `</section>` の後（`</main>` の前）に追加する。並びは 変更あり → 次回の出勤 → カレンダー → 申請の締切 → 勤務予定時間。
+カレンダーは幅375pxでも7列が収まるよう、曜日は見出し行に出し、マスには日とINだけを出す。本人のシフトがある日は日別一覧の自分の行と同じ `bg-amber-50` で強調する。
 
 ```html
   <section>
@@ -1525,17 +1819,37 @@ public class HomeService {
     <p th:unless="${view.nextShift}" class="card text-sm text-stone-600">公開されている次回の出勤はありません</p>
   </section>
 
-  <section th:unless="${#lists.isEmpty(view.upcoming)}">
-    <h2 class="mb-2 font-bold">直近の出勤</h2>
-    <ul class="divide-y divide-stone-200 rounded-lg border border-stone-200 bg-white">
-      <li th:each="s : ${view.upcoming}">
-        <a th:href="@{/shifts(date=${s.date})}" class="flex items-center justify-between gap-2 px-4 py-3">
-          <span th:text="${s.dateLabel}">9/28（月）</span>
-          <span class="tabular-nums" th:text="${s.timeLabel}">09:00〜13:00</span>
-          <span class="text-sm text-stone-600" th:text="${s.positionName}">キッチン</span>
+  <section th:with="cal=${view.calendar}">
+    <div class="mb-2 flex items-center justify-between gap-2">
+      <a th:if="${cal.previousVisible}" th:href="@{/(month=${cal.previousMonth})}"
+         class="btn-secondary px-3 py-1 text-sm">&lt; 前の月</a>
+      <span th:unless="${cal.previousVisible}" class="w-20"></span>
+      <h2 class="font-bold" th:text="${cal.monthLabel}">2026年9月</h2>
+      <a th:href="@{/(month=${cal.nextMonth})}" class="btn-secondary px-3 py-1 text-sm">次の月 &gt;</a>
+    </div>
+    <div class="grid grid-cols-7 gap-1 text-center text-xs">
+      <span class="text-red-700">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span>
+      <span class="text-blue-700">土</span>
+    </div>
+    <div th:each="week : ${cal.weeks}" class="mt-1 grid grid-cols-7 gap-1 text-center">
+      <th:block th:each="d : ${week}">
+        <span th:unless="${d.inMonth}" class="min-h-14"></span>
+        <a th:if="${d.inMonth and d.linkable}" th:href="@{/shifts(date=${d.date})}"
+           class="relative flex min-h-14 flex-col items-center justify-center rounded border"
+           th:classappend="|${d.startLabel != null ? 'border-amber-400 bg-amber-50 font-bold' : 'border-stone-200 bg-white'} ${d.today ? 'ring-2 ring-stone-700' : ''}|">
+          <span class="text-sm" th:text="${d.day}">11</span>
+          <span class="text-xs tabular-nums" th:text="${d.startLabel}">11:00</span>
+          <span th:if="${d.changed}" class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
         </a>
-      </li>
-    </ul>
+        <span th:if="${d.inMonth and !d.linkable}"
+              class="relative flex min-h-14 flex-col items-center justify-center rounded border border-stone-100 bg-stone-100 text-stone-400"
+              th:classappend="${d.today} ? 'ring-2 ring-stone-700'">
+          <span class="text-sm" th:text="${d.day}">12</span>
+          <span th:if="${d.changed}" class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+        </span>
+      </th:block>
+    </div>
+    <p class="mt-1 text-xs text-stone-500">色付きの日は自分の出勤日（INの時刻）です。灰色の日はまだ公開されていません</p>
   </section>
 
   <section>
@@ -1565,32 +1879,34 @@ public class HomeService {
   </section>
 ```
 
-- [ ] **Step 7: テストが通ることを確認する**
+- [x] **Step 8: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=HomeTest,HomeChangeTest`
 Expected: PASS
 
-- [ ] **Step 8: ブラウザで動作を確認する**
+- [ ] **Step 9: ブラウザで動作を確認する**
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、スタッフでログインして次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
-- 上から「変更あり」（ある場合）・次回の出勤・直近の出勤・申請の締切・勤務予定時間の順に並ぶ
+- 上から「変更あり」（ある場合）・次回の出勤・カレンダー・申請の締切・勤務予定時間の順に並ぶ
+- カレンダーは日曜始まりで、自分の出勤日はINの時刻が出て色付きになる。公開済みの日を押すとその日の日別一覧が開く。下書きの日は灰色で押せない
+- 前の月・次の月へ移動できる。スタッフは先月がすべて7日前より前なら「前の月」が出ない
 - 下書きの日のシフトはどこにも出ず、公開すると出る
 - 未提出のサイクルは赤く強調され、押すと申請画面のその月が開く。申請を登録すると「提出済み」になる
-- スマートフォン幅（375px）で横スクロールが出ない
+- スマートフォン幅（375px）でカレンダーの7列が収まり、横スクロールが出ない
 
-- [ ] **Step 9: 全テストを実行してコミットする**
+- [x] **Step 10: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
 
 ```bash
 git add -A
-git commit -m "feat: トップ画面の次回の出勤・直近の出勤・締切案内・予定時間
+git commit -m "feat: トップ画面の次回の出勤・カレンダー・締切案内・予定時間
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 10: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 11: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-28-plan4-viewing.md
