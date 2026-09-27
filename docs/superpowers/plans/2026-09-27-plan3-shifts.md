@@ -89,7 +89,7 @@ src/test/java/jp/bk/shiftmanager/
   - 画面：`GET /admin/shifts?date=yyyy-MM-dd`（テンプレート `admin/shifts/day`、モデル `view`・`timeOptions`）
   - `TestData#shift(User, Position, LocalDate, String start, String end)`、`#publish(LocalDate)`、`#hide(Position)`
 
-- [ ] **Step 1: 警告の判定の失敗するテストを書く**
+- [x] **Step 1: 警告の判定の失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/util/ShiftWarningsTest.java`：
 
@@ -136,7 +136,7 @@ class ShiftWarningsTest {
 }
 ```
 
-- [ ] **Step 2: 転記画面の失敗するテストを書く**
+- [x] **Step 2: 転記画面の失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/TestData.java` に次のメソッドを追加する（既存のメソッドは変更しない）：
 
@@ -370,12 +370,12 @@ class ShiftDayTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 3: テストが失敗することを確認する**
+- [x] **Step 3: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=ShiftWarningsTest,ShiftDayTest`
 Expected: FAIL（コンパイルエラー：`ShiftWarnings`・`ShiftDayView` 等が存在しない）
 
-- [ ] **Step 4: エンティティ・Mapper・Repository・警告の判定を実装する**
+- [x] **Step 4: エンティティ・Mapper・Repository・警告の判定を実装する**
 
 `entity/Shift.java`：
 
@@ -538,7 +538,7 @@ public final class ShiftWarnings {
 }
 ```
 
-- [ ] **Step 5: フォーム・DTOを実装する**
+- [x] **Step 5: フォーム・DTOを実装する**
 
 `form/ShiftRowForm.java`：
 
@@ -675,7 +675,7 @@ public class ShiftDayView {
 }
 ```
 
-- [ ] **Step 6: Service・コントローラーを実装する**
+- [x] **Step 6: Service・コントローラーを実装する**
 
 `service/ShiftService.java`：
 
@@ -929,7 +929,7 @@ public class ShiftAdminController {
 }
 ```
 
-- [ ] **Step 7: テンプレートとJavaScriptを作成し、ヘッダーに「転記」を追加する**
+- [x] **Step 7: テンプレートとJavaScriptを作成し、ヘッダーに「転記」を追加する**
 
 `src/main/resources/templates/admin/shifts/row.html`（1行のフラグメント。雛形では `index` が `ROW_INDEX`、`row` が null）：
 
@@ -1176,12 +1176,12 @@ public class ShiftAdminController {
       <a th:href="@{/admin/shifts}" class="hover:underline">転記</a>
 ```
 
-- [ ] **Step 8: テストが通ることを確認する**
+- [x] **Step 8: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=ShiftWarningsTest,ShiftDayTest`
 Expected: PASS
 
-- [ ] **Step 9: ブラウザで動作を確認する**
+- [x] **Step 9: ブラウザで動作を確認する**（未実施：ユーザーに確認を依頼）
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、管理者でログインしてポジション・スタッフ・申請を用意してから `/admin/shifts?date=（申請のある日）` を開き、次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - 名前を選ぶと申請IN・OUTが表示され、申請がない人は `--:--` と「申請がありません」が出る
@@ -1192,7 +1192,7 @@ Expected: PASS
 - 名前を変更してから前後の日へのリンクを押すと確認が出る
 （「登録する」はTask 2で実装するため、この時点では押さない）
 
-- [ ] **Step 10: 全テストを実行してコミットする**
+- [x] **Step 10: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -1204,7 +1204,7 @@ git commit -m "feat: 転記画面の表示（名前候補・申請との差分�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 11: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 11: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-27-plan3-shifts.md
