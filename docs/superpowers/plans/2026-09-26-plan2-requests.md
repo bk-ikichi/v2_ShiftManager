@@ -3045,7 +3045,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `service.AdminRequestService#resolveCycle(String date): Cycle`、`#getTable(Cycle): RequestTableView`
   - 画面：`GET /admin/requests?date=yyyy-MM-dd`（その日を含むサイクル。省略時は今日の次のサイクル）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/AdminRequestTest.java`：
 
@@ -3179,12 +3179,12 @@ class AdminRequestTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=AdminRequestTest`
 Expected: FAIL（コンパイルエラー：`RequestTableView` などが存在しない）
 
-- [ ] **Step 3: Mapper・Repositoryにメソッドを追加する**
+- [x] **Step 3: Mapper・Repositoryにメソッドを追加する**
 
 `mapper/ShiftRequestMapper.java` に追加する：
 
@@ -3217,7 +3217,7 @@ Expected: FAIL（コンパイルエラー：`RequestTableView` などが存在�
     }
 ```
 
-- [ ] **Step 4: DTOを実装する**
+- [x] **Step 4: DTOを実装する**
 
 `src/main/java/jp/bk/shiftmanager/dto/RequestCell.java`：
 
@@ -3286,7 +3286,7 @@ public class RequestTableView {
 }
 ```
 
-- [ ] **Step 5: Service・コントローラーを実装する**
+- [x] **Step 5: Service・コントローラーを実装する**
 
 `src/main/java/jp/bk/shiftmanager/service/AdminRequestService.java`：
 
@@ -3415,7 +3415,7 @@ public class AdminRequestController {
 }
 ```
 
-- [ ] **Step 6: テンプレートを作成し、ヘッダーに「申請一覧」を追加する**
+- [x] **Step 6: テンプレートを作成し、ヘッダーに「申請一覧」を追加する**
 
 `src/main/resources/templates/admin/requests/table.html`：
 
@@ -3485,12 +3485,12 @@ public class AdminRequestController {
       <a th:href="@{/admin/requests}" class="hover:underline">申請一覧</a>
 ```
 
-- [ ] **Step 7: テストが通ることを確認する**
+- [x] **Step 7: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=AdminRequestTest`
 Expected: PASS（6件）
 
-- [ ] **Step 8: 全テストを実行してコミットする**
+- [x] **Step 8: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -3502,7 +3502,7 @@ git commit -m "feat: 管理者の申請一覧（サイクル×スタッフ、未
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 5のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 9: この計画ファイルのTask 5のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-26-plan2-requests.md
