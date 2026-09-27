@@ -1,5 +1,6 @@
 package jp.bk.shiftmanager;
 
+import java.time.LocalDate;
 import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.entity.Position;
 import jp.bk.shiftmanager.entity.User;
@@ -21,12 +22,19 @@ public class TestData {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final PositionMapper positionMapper;
+    private final TestClock clock;
 
     /** 全データを削除し、設定を初期値に戻す */
     public void reset() {
         jdbc.execute("TRUNCATE shift_changes, published_dates, shifts, cycle_unavailable, "
                 + "shift_requests, shift_patterns, users, positions RESTART IDENTITY CASCADE");
         jdbc.update("UPDATE app_settings SET deadline_days_before = 5");
+        clock.setToday(TestClock.DEFAULT_TODAY);
+    }
+
+    /** アプリの「今日」を変更する（テストごとに初期値へ戻る） */
+    public void today(LocalDate today) {
+        clock.setToday(today);
     }
 
     /** パスワード変更済み・有効なスタッフを作成する */

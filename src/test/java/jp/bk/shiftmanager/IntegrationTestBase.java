@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /** DBとMockMvcを使う結合テストの基底クラス。全テストで同じコンテキスト（同じコンテナ）を共有する */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import({TestcontainersConfiguration.class, TestData.class})
+@Import({TestcontainersConfiguration.class, TestData.class, TestClock.class})
 public abstract class IntegrationTestBase {
 
     @Autowired
