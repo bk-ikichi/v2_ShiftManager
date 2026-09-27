@@ -16,6 +16,10 @@ public class CycleUnavailableRepository {
         return cycleUnavailableMapper.findStarts(userId, from, to);
     }
 
+    public List<Long> findUserIds(LocalDate cycleStart) {
+        return cycleUnavailableMapper.findUserIds(cycleStart);
+    }
+
     public void insert(long userId, LocalDate cycleStart) {
         cycleUnavailableMapper.insert(userId, cycleStart);
     }

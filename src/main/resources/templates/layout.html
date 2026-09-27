@@ -17,6 +17,7 @@
     <a th:href="@{/}" class="font-bold">シフト管理</a>
     <a th:href="@{/requests}" class="hover:underline">申請</a>
     <th:block sec:authorize="hasRole('ADMIN')">
+      <a th:href="@{/admin/requests}" class="hover:underline">申請一覧</a>
       <a th:href="@{/admin/staff}" class="hover:underline">スタッフ</a>
       <a th:href="@{/admin/positions}" class="hover:underline">ポジション</a>
       <a th:href="@{/admin/settings}" class="hover:underline">設定</a>

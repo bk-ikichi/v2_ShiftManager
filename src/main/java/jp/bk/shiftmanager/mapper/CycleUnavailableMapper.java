@@ -21,6 +21,10 @@ public interface CycleUnavailableMapper {
     List<LocalDate> findStarts(@Param("userId") long userId, @Param("from") LocalDate from,
             @Param("to") LocalDate to);
 
+    /** そのサイクルを「出勤できない」にしたスタッフ */
+    @Select("SELECT user_id FROM cycle_unavailable WHERE cycle_start = #{cycleStart}")
+    List<Long> findUserIds(@Param("cycleStart") LocalDate cycleStart);
+
     @Insert("""
             INSERT INTO cycle_unavailable (user_id, cycle_start) VALUES (#{userId}, #{cycleStart})
             ON CONFLICT DO NOTHING

@@ -17,6 +17,10 @@ public class ShiftRequestRepository {
         return shiftRequestMapper.findByUserAndPeriod(userId, from, to);
     }
 
+    public List<ShiftRequest> findByPeriod(LocalDate from, LocalDate to) {
+        return shiftRequestMapper.findByPeriod(from, to);
+    }
+
     public void upsert(ShiftRequest request) {
         shiftRequestMapper.upsert(request);
     }
