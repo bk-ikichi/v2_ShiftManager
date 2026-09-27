@@ -33,18 +33,21 @@
           <span class="block text-xs text-stone-500" th:text="${row.positionName}">キッチン</span>
           <span th:if="${row.unavailable}" class="block text-xs text-red-700">この期間は出勤できない</span>
         </th>
-        <td th:each="cell : ${row.cells}" class="whitespace-nowrap px-2 py-1 text-center">
-          <th:block th:if="${cell.startTime != null}">
-            <span th:text="${cell.startTime}">09:00</span><span class="select-none px-1 text-stone-400" aria-hidden="true">|</span><span th:text="${cell.endTime}">17:00</span>
-          </th:block>
-          <span th:if="${cell.note != null}" th:title="${cell.note}" class="cursor-help text-amber-700">※</span>
+        <td th:each="cell : ${row.cells}" class="whitespace-nowrap p-0 text-center">
+          <a th:href="@{/admin/requests/edit(userId=${row.userId},date=${cell.date})}"
+             class="block min-h-10 min-w-14 px-2 py-1 hover:bg-amber-50">
+            <th:block th:if="${cell.startTime != null}">
+              <span th:text="${cell.startTime}">09:00</span><span class="select-none px-1 text-stone-400" aria-hidden="true">|</span><span th:text="${cell.endTime}">17:00</span>
+            </th:block>
+            <span th:if="${cell.note != null}" th:title="${cell.note}" class="text-amber-700">※</span>
+          </a>
         </td>
       </tr>
       </tbody>
     </table>
   </div>
   <p th:if="${#lists.isEmpty(view.rows)}" class="mt-4 text-sm text-stone-500">有効なスタッフがいません。</p>
-  <p class="mt-2 text-xs text-stone-500">※ にカーソルを合わせると備考を表示します。</p>
+  <p class="mt-2 text-xs text-stone-500">マスをクリックすると代理で編集できます（締切後も可）。※ にカーソルを合わせると備考を表示します。</p>
 </main>
 </body>
 </html>

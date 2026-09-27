@@ -20,6 +20,9 @@ public interface ShiftRequestMapper {
     List<ShiftRequest> findByUserAndPeriod(@Param("userId") long userId, @Param("from") LocalDate from,
             @Param("to") LocalDate to);
 
+    @Select("SELECT * FROM shift_requests WHERE user_id = #{userId} AND work_date = #{date}")
+    ShiftRequest find(@Param("userId") long userId, @Param("date") LocalDate date);
+
     @Select("SELECT * FROM shift_requests WHERE work_date BETWEEN #{from} AND #{to} ORDER BY user_id, work_date")
     List<ShiftRequest> findByPeriod(@Param("from") LocalDate from, @Param("to") LocalDate to);
 

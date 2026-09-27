@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('申請の代理編集')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-md px-4 py-6">
+  <h1 class="mb-4 text-lg font-bold">申請の代理編集</h1>
+  <div th:replace="~{layout :: flash}"></div>
+  <div class="card space-y-4">
+    <p>
+      <span class="font-bold" th:text="${view.userName}">山田太郎</span>
+      <span class="ml-2" th:text="${view.dateLabel}">10/2（金）</span>
+    </p>
+    <form th:action="@{/admin/requests/edit}" method="post" class="space-y-3">
+      <input type="hidden" name="userId" th:value="${view.userId}">
+      <input type="hidden" name="date" th:value="${view.date}">
+      <div class="grid grid-cols-2 gap-2">
+        <label class="block">
+          <span class="text-sm">IN</span>
+          <select name="startTime" class="input px-1">
+            <option value="">--:--</option>
+            <option th:each="t : ${timeOptions}" th:value="${t}" th:text="${t}"
+                    th:selected="${t == view.startTime}"></option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-sm">OUT</span>
+          <select name="endTime" class="input px-1">
+            <option value="">--:--</option>
+            <option th:each="t : ${timeOptions}" th:value="${t}" th:text="${t}"
+                    th:selected="${t == view.endTime}"></option>
+          </select>
+        </label>
+      </div>
+      <label class="block">
+        <span class="text-sm">備考</span>
+        <input name="note" th:value="${view.note}" maxlength="200" class="input">
+      </label>
+      <p class="text-sm text-stone-600">締切後でも保存できます。「この期間は出勤できない」にしている期間に保存すると、チェックは外れます。</p>
+      <button class="btn-primary w-full">保存する</button>
+    </form>
+    <form th:if="${view.exists}" th:action="@{/admin/requests/delete}" method="post" class="text-right">
+      <input type="hidden" name="userId" th:value="${view.userId}">
+      <input type="hidden" name="date" th:value="${view.date}">
+      <button class="btn-danger">この日の申請を削除する</button>
+    </form>
+  </div>
+  <a th:href="@{/admin/requests(date=${view.date})}" class="mt-4 inline-block text-sm underline">申請一覧へ戻る</a>
+</main>
+</body>
+</html>

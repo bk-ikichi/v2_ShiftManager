@@ -2,6 +2,7 @@ package jp.bk.shiftmanager.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import jp.bk.shiftmanager.entity.ShiftRequest;
 import jp.bk.shiftmanager.mapper.ShiftRequestMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,10 @@ public class ShiftRequestRepository {
 
     public List<ShiftRequest> findByUserAndPeriod(long userId, LocalDate from, LocalDate to) {
         return shiftRequestMapper.findByUserAndPeriod(userId, from, to);
+    }
+
+    public Optional<ShiftRequest> find(long userId, LocalDate date) {
+        return Optional.ofNullable(shiftRequestMapper.find(userId, date));
     }
 
     public List<ShiftRequest> findByPeriod(LocalDate from, LocalDate to) {
