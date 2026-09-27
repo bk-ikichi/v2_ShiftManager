@@ -4079,8 +4079,7 @@ public class AdminRequestController {
           <a th:href="@{/admin/requests/edit(userId=${row.userId},date=${cell.date})}"
              class="block min-h-10 min-w-14 px-2 py-1 hover:bg-amber-50">
             <th:block th:if="${cell.startTime != null}">
-              <span th:text="${cell.startTime}">09:00</span><br>
-              <span th:text="${cell.endTime}">17:00</span>
+              <span th:text="${cell.startTime}">09:00</span><span class="select-none px-1 text-stone-400" aria-hidden="true">|</span><span th:text="${cell.endTime}">17:00</span>
             </th:block>
             <span th:if="${cell.note != null}" th:title="${cell.note}" class="text-amber-700">※</span>
           </a>

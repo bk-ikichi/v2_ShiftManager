@@ -35,8 +35,7 @@
         </th>
         <td th:each="cell : ${row.cells}" class="whitespace-nowrap px-2 py-1 text-center">
           <th:block th:if="${cell.startTime != null}">
-            <span th:text="${cell.startTime}">09:00</span><br>
-            <span th:text="${cell.endTime}">17:00</span>
+            <span th:text="${cell.startTime}">09:00</span><span class="select-none px-1 text-stone-400" aria-hidden="true">|</span><span th:text="${cell.endTime}">17:00</span>
           </th:block>
           <span th:if="${cell.note != null}" th:title="${cell.note}" class="cursor-help text-amber-700">※</span>
         </td>
