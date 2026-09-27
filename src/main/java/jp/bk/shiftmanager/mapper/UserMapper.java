@@ -56,4 +56,8 @@ public interface UserMapper {
     /** 同じログインIDの件数（excludeIdは更新時の自分自身を除外するため。新規時は0） */
     @Select("SELECT COUNT(*) FROM users WHERE login_id = #{loginId} AND id <> #{excludeId}")
     long countByLoginId(@Param("loginId") String loginId, @Param("excludeId") long excludeId);
+
+    /** 全スタッフ（無効を含む。名前の順） */
+    @Select("SELECT * FROM users ORDER BY name, id")
+    List<User> findAll();
 }

@@ -49,4 +49,9 @@ public class UserRepository {
     public boolean existsLoginId(String loginId, long excludeId) {
         return userMapper.countByLoginId(loginId, excludeId) > 0;
     }
+
+    /** 全スタッフ（無効を含む。名前の順） */
+    public List<User> findAll() {
+        return userMapper.findAll();
+    }
 }

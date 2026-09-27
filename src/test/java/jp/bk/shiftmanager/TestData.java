@@ -99,4 +99,20 @@ public class TestData {
     public void unavailable(User user, LocalDate cycleStart) {
         jdbc.update("INSERT INTO cycle_unavailable (user_id, cycle_start) VALUES (?, ?)", user.getId(), cycleStart);
     }
+
+    /** 確定シフトを登録する（下書き） */
+    public void shift(User user, Position position, LocalDate date, String start, String end) {
+        jdbc.update("INSERT INTO shifts (work_date, user_id, position_id, start_time, end_time) "
+                + "VALUES (?, ?, ?, ?::time, ?::time)", date, user.getId(), position.getId(), start, end);
+    }
+
+    /** その日を公開済みにする */
+    public void publish(LocalDate date) {
+        jdbc.update("INSERT INTO published_dates (work_date) VALUES (?)", date);
+    }
+
+    /** ポジションを非表示にする */
+    public void hide(Position position) {
+        jdbc.update("UPDATE positions SET hidden = TRUE WHERE id = ?", position.getId());
+    }
 }

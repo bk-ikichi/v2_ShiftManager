@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('シフトの転記')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-5xl px-4 pb-28 pt-6">
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    <a th:href="@{/admin/shifts(date=${view.previousDate})}" data-leave-link class="btn-secondary px-3 py-1">
+      &lt; <span th:text="${view.previousLabel}">10/1（木）</span></a>
+    <h1 class="px-2 text-lg font-bold" th:text="${view.dateLabel}">10/2（金）</h1>
+    <a th:href="@{/admin/shifts(date=${view.nextDate})}" data-leave-link class="btn-secondary px-3 py-1">
+      <span th:text="${view.nextLabel}">10/3（土）</span> &gt;</a>
+    <span th:if="${view.published}" class="rounded bg-green-100 px-2 py-1 text-sm text-green-800">公開済み</span>
+    <span th:unless="${view.published}" class="rounded bg-stone-200 px-2 py-1 text-sm text-stone-700">下書き</span>
+  </div>
+  <div th:replace="~{layout :: flash}"></div>
+  <p th:if="${#lists.isEmpty(view.groups)}" class="card text-sm">
+    ポジションが登録されていません。先に <a th:href="@{/admin/positions}" class="underline">ポジション</a> を登録してください。
+  </p>
+
+  <form id="shift-form" th:action="@{/admin/shifts}" method="post" th:data-next-index="${view.nextIndex}">
+    <input type="hidden" name="date" th:value="${view.date}">
+    <section th:each="g : ${view.groups}" class="mb-6" data-group>
+      <h2 class="mb-2 font-bold" th:text="${g.positionName}">キッチン</h2>
+      <div class="overflow-x-auto rounded-lg border border-stone-200 bg-white">
+        <table class="min-w-full border-collapse text-sm">
+          <thead>
+          <tr class="bg-stone-100 text-left">
+            <th class="px-2 py-2">名前</th>
+            <th class="px-2 py-2">IN</th>
+            <th class="px-2 py-2">OUT</th>
+            <th class="px-2 py-2 text-center">申請IN</th>
+            <th class="px-2 py-2 text-center">申請OUT</th>
+            <th class="px-2 py-2"></th>
+            <th class="px-2 py-2"></th>
+          </tr>
+          </thead>
+          <tbody data-rows>
+          <!-- th:replace は th:each より先に処理されるため、th:block で繰り返す -->
+          <th:block th:each="row : ${g.rows}">
+            <tr th:replace="~{admin/shifts/row :: row(${g}, ${row.index}, ${row})}"></tr>
+          </th:block>
+          </tbody>
+        </table>
+      </div>
+      <template data-row-template>
+        <tr th:replace="~{admin/shifts/row :: row(${g}, 'ROW_INDEX', null)}"></tr>
+      </template>
+      <button type="button" data-add-row class="mt-2 text-sm text-amber-800 underline">+ 追加する</button>
+    </section>
+
+    <div th:if="${!#lists.isEmpty(view.groups)}" class="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white p-3">
+      <div class="mx-auto flex max-w-5xl items-center justify-end gap-4">
+        <button class="btn-primary px-8">登録する</button>
+      </div>
+    </div>
+  </form>
+
+  <ul id="request-data" hidden>
+    <li th:each="r : ${view.requests}" th:data-user-id="${r.userId}" th:data-start="${r.start}"
+        th:data-end="${r.end}" th:data-note="${r.note}"></li>
+  </ul>
+</main>
+<script th:src="@{/js/shifts.js}" defer></script>
+</body>
+</html>
