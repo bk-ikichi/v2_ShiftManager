@@ -2213,7 +2213,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `ShiftDayForm#published`（画面を開いたときに公開済みだったか）
   - `TestData#acknowledgeChanges(User)`
 
-- [ ] **Step 1: 変更の種別の判定の失敗するテストを書く**
+- [x] **Step 1: 変更の種別の判定の失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/util/ShiftChangesTest.java`：
 
@@ -2268,7 +2268,7 @@ class ShiftChangesTest {
 }
 ```
 
-- [ ] **Step 2: 公開済みの日の編集の失敗するテストを書く**
+- [x] **Step 2: 公開済みの日の編集の失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/TestData.java` に追加する：
 
@@ -2502,12 +2502,12 @@ class ShiftChangeTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 3: テストが失敗することを確認する**
+- [x] **Step 3: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=ShiftChangesTest,ShiftChangeTest`
 Expected: FAIL（コンパイルエラー：`ShiftChanges`・`ShiftChangeType`・`ShiftChangeMapper` が存在しない）
 
-- [ ] **Step 4: エンティティ・Mapper・Repository・種別の判定を実装する**
+- [x] **Step 4: エンティティ・Mapper・Repository・種別の判定を実装する**
 
 `entity/ShiftChangeType.java`：
 
@@ -2649,7 +2649,7 @@ public final class ShiftChanges {
 }
 ```
 
-- [ ] **Step 5: 登録で公開状態を確認し、変更を記録する**
+- [x] **Step 5: 登録で公開状態を確認し、変更を記録する**
 
 `form/ShiftDayForm.java` に追加：
 
@@ -2705,7 +2705,7 @@ public final class ShiftChanges {
     }
 ```
 
-- [ ] **Step 6: 画面に公開済みの印・案内と登録前の確認を追加する**
+- [x] **Step 6: 画面に公開済みの印・案内と登録前の確認を追加する**
 
 `src/main/resources/templates/admin/shifts/day.html` の登録フォームを変更する。`<form id="shift-form" ...>` の開始タグに `th:data-published="${view.published}"` を追加し、`<input type="hidden" name="date" ...>` の直後に追加する：
 
@@ -2739,19 +2739,19 @@ public final class ShiftChanges {
   });
 ```
 
-- [ ] **Step 7: テストが通ることを確認する**
+- [x] **Step 7: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=ShiftChangesTest,ShiftChangeTest,ShiftSaveTest,ShiftPublishTest,ShiftDayTest`
 Expected: PASS（`ShiftSaveTest` は `published` を送らないため false として扱われ、下書きの日への登録として従来どおり通る）
 
-- [ ] **Step 8: ブラウザで動作を確認する**
+- [x] **Step 8: ブラウザで動作を確認する**
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、管理者で公開済みの日の `/admin/shifts?date=` を開いて次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - 「登録する」を押すと「公開済みの日です。変更はすぐスタッフに表示されます。登録しますか？」が出て、キャンセルすると保存されず入力も残る
 - 下書きの日では確認が出ない
 - 下書きの日を2つのタブで開き、片方で公開してからもう片方で「登録する」とエラーになり、入力が残る。もう一度「登録する」と確認が出て保存できる
 
-- [ ] **Step 9: 全テストを実行してコミットする**
+- [x] **Step 9: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -2763,7 +2763,7 @@ git commit -m "feat: 公開済みの日の編集の確認と「変更あり」�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 10: この計画ファイルのTask 4のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 10: この計画ファイルのTask 4のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-27-plan3-shifts.md
