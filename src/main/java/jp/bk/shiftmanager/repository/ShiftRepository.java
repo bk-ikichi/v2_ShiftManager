@@ -17,4 +17,12 @@ public class ShiftRepository {
     public List<Shift> findByDate(LocalDate date) {
         return shiftMapper.findByDate(date);
     }
+
+    public void insert(Shift shift) {
+        shiftMapper.insert(shift);
+    }
+
+    public void deleteByDate(LocalDate date) {
+        shiftMapper.deleteByDate(date);
+    }
 }

@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,7 @@ import jp.bk.shiftmanager.entity.Shift;
 import jp.bk.shiftmanager.entity.ShiftRequest;
 import jp.bk.shiftmanager.entity.User;
 import jp.bk.shiftmanager.exception.BusinessException;
+import jp.bk.shiftmanager.form.ShiftDayForm;
 import jp.bk.shiftmanager.form.ShiftRowForm;
 import jp.bk.shiftmanager.repository.PositionRepository;
 import jp.bk.shiftmanager.repository.PublishedDateRepository;
@@ -33,6 +35,7 @@ import jp.bk.shiftmanager.util.TimeRange;
 import jp.bk.shiftmanager.util.TimeSlots;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** 確定シフトの転記（管理者） */
 @Service
@@ -43,6 +46,7 @@ public class ShiftService {
     private static final int BLANK_ROWS = 6;
     /** 申請がない場合の申請IN・OUTの表示 */
     private static final String NO_REQUEST_TIME = "--:--";
+    private static final String USER_NOT_FOUND = "スタッフが見つかりません";
 
     private final Clock clock;
     private final ShiftRepository shiftRepository;
@@ -71,6 +75,94 @@ public class ShiftService {
             rows.computeIfAbsent(shift.getPositionId(), id -> new ArrayList<>()).add(toRowForm(shift));
         }
         return buildView(date, shifts, rows, shifts.isEmpty());
+    }
+
+    /** 登録できなかった入力をそのまま表示し直す（空欄行も送信されたまま残し、付け足さない） */
+    public ShiftDayView getDay(LocalDate date, ShiftDayForm input) {
+        Map<Long, List<ShiftRowForm>> rows = new HashMap<>();
+        for (ShiftRowForm row : input.getRows()) {
+            Long positionId = row == null ? null : parseId(row.getPositionId());
+            if (positionId != null) {
+                rows.computeIfAbsent(positionId, id -> new ArrayList<>()).add(row);
+            }
+        }
+        return buildView(date, shiftRepository.findByDate(date), rows, false);
+    }
+
+    /**
+     * 1日分のシフトを登録し直す。空欄の行は捨て、1行でも不正があれば何も保存しない。
+     * 並び順は保存せず、表示時にポジションの表示順 → INの早い順に並べる
+     */
+    @Transactional
+    public void saveDay(ShiftDayForm form) {
+        LocalDate date = parseDate(form.getDate());
+        List<Shift> before = shiftRepository.findByDate(date);
+        List<Shift> after = parseRows(date, form, before);
+        shiftRepository.deleteByDate(date);
+        after.forEach(shiftRepository::insert);
+    }
+
+    /** 全行を検証してシフトにする。エラーはどのポジション・誰の行か分かるメッセージにする */
+    private List<Shift> parseRows(LocalDate date, ShiftDayForm form, List<Shift> before) {
+        Map<Long, Position> positions = positionRepository.findAll().stream()
+                .collect(Collectors.toMap(Position::getId, position -> position));
+        Map<Long, User> users = userRepository.findAll().stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+        Set<Long> assigned = before.stream().map(Shift::getUserId).collect(Collectors.toSet());
+        Set<Long> chosen = new HashSet<>();
+
+        List<Shift> shifts = new ArrayList<>();
+        for (ShiftRowForm row : form.getRows()) {
+            if (row == null || isBlankRow(row)) {
+                continue;
+            }
+            Position position = positions.get(parseId(row.getPositionId()));
+            if (position == null) {
+                throw new BusinessException("不正なポジションです");
+            }
+            if (isBlank(row.getUserId())) {
+                throw new BusinessException(position.getName() + "：名前を選択してください");
+            }
+            User user = users.get(parseId(row.getUserId()));
+            if (user == null) {
+                throw new BusinessException(USER_NOT_FOUND);
+            }
+            String label = position.getName() + "・" + user.getName();
+            // 無効化したスタッフは、その日に登録済みの場合だけ残せる
+            if (!user.isEnabled() && !assigned.contains(user.getId())) {
+                throw new BusinessException(label + "：無効なスタッフは選択できません");
+            }
+            if (!chosen.add(user.getId())) {
+                throw new BusinessException(user.getName() + "が2回選ばれています。1日に1回だけ選択してください");
+            }
+            TimeRange range;
+            try {
+                range = TimeRange.parse(row.getStartTime(), row.getEndTime());
+            } catch (BusinessException e) {
+                throw new BusinessException(label + "：" + e.getMessage());
+            }
+            Shift shift = new Shift();
+            shift.setWorkDate(date);
+            shift.setUserId(user.getId());
+            shift.setPositionId(position.getId());
+            shift.setStartTime(range.start());
+            shift.setEndTime(range.end());
+            shifts.add(shift);
+        }
+        return shifts;
+    }
+
+    /** 名前・IN・OUTがすべて空の行（ポジションは雛形に常に入っているため見ない） */
+    private boolean isBlankRow(ShiftRowForm row) {
+        return isBlank(row.getUserId()) && isBlank(row.getStartTime()) && isBlank(row.getEndTime());
+    }
+
+    private LocalDate parseDate(String text) {
+        try {
+            return LocalDate.parse(text == null ? "" : text);
+        } catch (DateTimeParseException e) {
+            throw new BusinessException("不正な日付です");
+        }
     }
 
     /**
