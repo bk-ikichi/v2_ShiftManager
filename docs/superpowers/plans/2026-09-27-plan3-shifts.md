@@ -1713,7 +1713,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `service.PublishService#publishDay(String date)`、`#publishRange(String from, String to): List<LocalDate>`（公開しなかった日）
   - 画面：`POST /admin/shifts/publish`（`date`）、`POST /admin/shifts/publish-range`（`date`・`from`・`to`）。どちらも `/admin/shifts?date=（表示中の日）` へリダイレクト
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/ShiftPublishTest.java`：
 
@@ -1907,12 +1907,12 @@ class ShiftPublishTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=ShiftPublishTest`
 Expected: FAIL（コンパイルエラー：`DateOption`・`ShiftDayView#getRangeStart` 等が存在しない）
 
-- [ ] **Step 3: Mapper・Repositoryを実装する**
+- [x] **Step 3: Mapper・Repositoryを実装する**
 
 `mapper/ShiftMapper.java` に追加：
 
@@ -1952,7 +1952,7 @@ Expected: FAIL（コンパイルエラー：`DateOption`・`ShiftDayView#getRang
     }
 ```
 
-- [ ] **Step 4: 公開のServiceを実装する**
+- [x] **Step 4: 公開のServiceを実装する**
 
 `service/PublishService.java`：
 
@@ -2033,7 +2033,7 @@ public class PublishService {
 }
 ```
 
-- [ ] **Step 5: 期間の選択肢を画面に渡す**
+- [x] **Step 5: 期間の選択肢を画面に渡す**
 
 `dto/DateOption.java`：
 
@@ -2075,7 +2075,7 @@ public class DateOption {
                 .toList());
 ```
 
-- [ ] **Step 6: コントローラーに公開を追加する**
+- [x] **Step 6: コントローラーに公開を追加する**
 
 `controller/ShiftAdminController.java` の import に `java.time.LocalDate`、`java.util.List`、`java.util.stream.Collectors`、`jp.bk.shiftmanager.service.PublishService`、`jp.bk.shiftmanager.util.DateLabels` を追加し、フィールドとメソッドを追加する：
 
@@ -2118,7 +2118,7 @@ public class DateOption {
     }
 ```
 
-- [ ] **Step 7: 画面に公開フォームを追加する**
+- [x] **Step 7: 画面に公開フォームを追加する**
 
 `src/main/resources/templates/admin/shifts/day.html` の `<div th:replace="~{layout :: flash}"></div>` の直前に追加する（登録フォームの入れ子にしない）：
 
@@ -2159,19 +2159,19 @@ public class DateOption {
   });
 ```
 
-- [ ] **Step 8: テストが通ることを確認する**
+- [x] **Step 8: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=ShiftPublishTest,ShiftDayTest,ShiftSaveTest`
 Expected: PASS
 
-- [ ] **Step 9: ブラウザで動作を確認する**
+- [x] **Step 9: ブラウザで動作を確認する**（未実施：ユーザーに確認を依頼）
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、管理者で `/admin/shifts` を開いて次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - 期間のプルダウンの初期値が表示中の日を含むサイクルの初日〜末日になっている
 - 「この日を公開」で「公開済み」になり、ボタンが消える
 - 名前を変更して登録せずに公開ボタンを押すと確認が出る
 
-- [ ] **Step 10: 全テストを実行してコミットする**
+- [x] **Step 10: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -2183,7 +2183,7 @@ git commit -m "feat: シフトの公開（この日を公開・期間を指定�
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 11: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 11: この計画ファイルのTask 3のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-27-plan3-shifts.md
