@@ -85,7 +85,7 @@ src/test/java/jp/bk/shiftmanager/
   - `config.ClockConfig.ZONE`（Asia/Tokyo）と `Clock` Bean
   - テスト：`TestClock.DEFAULT_TODAY`（2026-09-25）、`TestClock#setToday(LocalDate)`、`TestData#today(LocalDate)`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/util/CycleTest.java`：
 
@@ -304,12 +304,12 @@ class TestClockTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=CycleTest,DateLabelsTest,TimeSlotsTest,TimeRangeTest,TestClockTest`
 Expected: FAIL（コンパイルエラー：`Cycle` などが存在しない）
 
-- [ ] **Step 3: 日付・サイクルのユーティリティを実装する**
+- [x] **Step 3: 日付・サイクルのユーティリティを実装する**
 
 `src/main/java/jp/bk/shiftmanager/util/DateLabels.java`：
 
@@ -407,7 +407,7 @@ public record Cycle(LocalDate start, LocalDate end) {
 }
 ```
 
-- [ ] **Step 4: 時刻のユーティリティを実装する**
+- [x] **Step 4: 時刻のユーティリティを実装する**
 
 `src/main/java/jp/bk/shiftmanager/util/TimeSlots.java`：
 
@@ -488,7 +488,7 @@ public record TimeRange(LocalTime start, LocalTime end) {
 }
 ```
 
-- [ ] **Step 5: Clock Bean とテスト用の時計を実装する**
+- [x] **Step 5: Clock Bean とテスト用の時計を実装する**
 
 `src/main/java/jp/bk/shiftmanager/config/ClockConfig.java`：
 
@@ -584,12 +584,12 @@ public class TestClock extends Clock {
     }
 ```
 
-- [ ] **Step 6: テストが通ることを確認する**
+- [x] **Step 6: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=CycleTest,DateLabelsTest,TimeSlotsTest,TimeRangeTest,TestClockTest`
 Expected: PASS
 
-- [ ] **Step 7: 全テストを実行してコミットする**
+- [x] **Step 7: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -601,7 +601,7 @@ git commit -m "feat: サイクル計算・時刻の選択肢・Clockの導入
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 8: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 8: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-26-plan2-requests.md
