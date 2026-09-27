@@ -608,7 +608,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `POST /changes/acknowledge`（パラメータ `id`）→ `redirect:/`
   - `TestData#change(User, LocalDate, ShiftChangeType): long`（作成した記録のID）
 
-- [ ] **Step 1: テストデータに「変更あり」の記録を追加する**
+- [x] **Step 1: テストデータに「変更あり」の記録を追加する**
 
 `src/test/java/jp/bk/shiftmanager/TestData.java` に `import jp.bk.shiftmanager.entity.ShiftChangeType;` を追加し、クラス末尾に追加する：
 
@@ -621,7 +621,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
     }
 ```
 
-- [ ] **Step 2: 失敗するテストを書く**
+- [x] **Step 2: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/HomeChangeTest.java`：
 
@@ -760,12 +760,12 @@ class HomeChangeTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 3: テストが失敗することを確認する**
+- [x] **Step 3: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=HomeChangeTest`
 Expected: FAIL（コンパイルエラー：`HomeView`・`ChangeNotice` が存在しない）
 
-- [ ] **Step 4: DTOを作る**
+- [x] **Step 4: DTOを作る**
 
 `src/main/java/jp/bk/shiftmanager/dto/ShiftChangeRow.java`：
 
@@ -831,7 +831,7 @@ public class HomeView {
 }
 ```
 
-- [ ] **Step 5: Mapper・Repositoryに取得と確認済みを追加する**
+- [x] **Step 5: Mapper・Repositoryに取得と確認済みを追加する**
 
 `src/main/java/jp/bk/shiftmanager/mapper/ShiftChangeMapper.java` に `import jp.bk.shiftmanager.dto.ShiftChangeRow;` と `import org.apache.ibatis.annotations.Update;` を追加し、クラス末尾に追加する：
 
@@ -869,7 +869,7 @@ public class HomeView {
     }
 ```
 
-- [ ] **Step 6: `HomeService` を作る**
+- [x] **Step 6: `HomeService` を作る**
 
 `src/main/java/jp/bk/shiftmanager/service/HomeService.java`：
 
@@ -939,7 +939,7 @@ public class HomeService {
 }
 ```
 
-- [ ] **Step 7: `HomeController` を置き換える**
+- [x] **Step 7: `HomeController` を置き換える**
 
 `src/main/java/jp/bk/shiftmanager/controller/HomeController.java`：
 
@@ -978,7 +978,7 @@ public class HomeController {
 }
 ```
 
-- [ ] **Step 8: `home.html` を置き換える**
+- [x] **Step 8: `home.html` を置き換える**
 
 `src/main/resources/templates/home.html`：
 
@@ -1014,7 +1014,7 @@ public class HomeController {
 </html>
 ```
 
-- [ ] **Step 9: テストが通ることを確認する**
+- [x] **Step 9: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=HomeChangeTest,UserStateCheckFilterTest,LoginTest`
 Expected: PASS（`UserStateCheckFilterTest`・`LoginTest` は `/` を開くため、`@AuthenticationPrincipal LoginUser` が取れることの確認を兼ねる）
@@ -1026,7 +1026,7 @@ Expected: PASS（`UserStateCheckFilterTest`・`LoginTest` は `/` を開くた�
 - 「確認済み」を押すと消える。カードを押すとその日の日別一覧が開く
 - スマートフォン幅（375px）で「確認済み」ボタンが折り返さず押せる
 
-- [ ] **Step 11: 全テストを実行してコミットする**
+- [x] **Step 11: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -1038,7 +1038,7 @@ git commit -m "feat: トップ画面の「変更あり」と確認済み
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 12: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 12: この計画ファイルのTask 2のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-28-plan4-viewing.md
