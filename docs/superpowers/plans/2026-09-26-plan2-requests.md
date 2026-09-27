@@ -3529,7 +3529,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `service.AdminRequestService#getForEdit(long userId, LocalDate date)`、`#save(RequestEditForm): boolean`（「出勤できない」を解除したらtrue）、`#delete(long userId, LocalDate date)`
   - 画面：`GET /admin/requests/edit?userId=&date=`、`POST /admin/requests/edit`、`POST /admin/requests/delete`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/AdminRequestEditTest.java`：
 
@@ -3694,12 +3694,12 @@ class AdminRequestEditTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=AdminRequestEditTest`
 Expected: FAIL（コンパイルエラー：`RequestEditView` が存在しない）
 
-- [ ] **Step 3: Mapper・Repository・Form・DTOを実装する**
+- [x] **Step 3: Mapper・Repository・Form・DTOを実装する**
 
 `mapper/ShiftRequestMapper.java` に追加する：
 
@@ -3760,7 +3760,7 @@ public class RequestEditView {
 }
 ```
 
-- [ ] **Step 4: Serviceを置き換える**
+- [x] **Step 4: Serviceを置き換える**
 
 `src/main/java/jp/bk/shiftmanager/service/AdminRequestService.java` を次の内容に置き換える：
 
@@ -3928,7 +3928,7 @@ public class AdminRequestService {
 }
 ```
 
-- [ ] **Step 5: コントローラーを置き換える**
+- [x] **Step 5: コントローラーを置き換える**
 
 `src/main/java/jp/bk/shiftmanager/controller/AdminRequestController.java` を次の内容に置き換える：
 
@@ -4014,7 +4014,7 @@ public class AdminRequestController {
 }
 ```
 
-- [ ] **Step 6: 編集画面を作成し、一覧のマスをリンクにする**
+- [x] **Step 6: 編集画面を作成し、一覧のマスをリンクにする**
 
 `src/main/resources/templates/admin/requests/edit.html`：
 
@@ -4092,12 +4092,12 @@ public class AdminRequestController {
   <p class="mt-2 text-xs text-stone-500">マスをクリックすると代理で編集できます（締切後も可）。※ にカーソルを合わせると備考を表示します。</p>
 ```
 
-- [ ] **Step 7: テストが通ることを確認する**
+- [x] **Step 7: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=AdminRequestEditTest,AdminRequestTest`
 Expected: PASS
 
-- [ ] **Step 8: 全テストを実行してコミットする**
+- [x] **Step 8: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -4109,7 +4109,7 @@ git commit -m "feat: 管理者による申請の代理編集
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 9: この計画ファイルのTask 6のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 9: この計画ファイルのTask 6のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-26-plan2-requests.md
