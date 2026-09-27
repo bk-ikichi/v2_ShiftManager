@@ -32,4 +32,8 @@ public interface ShiftRequestMapper {
 
     @Delete("DELETE FROM shift_requests WHERE user_id = #{userId} AND work_date = #{date}")
     int delete(@Param("userId") long userId, @Param("date") LocalDate date);
+
+    @Delete("DELETE FROM shift_requests WHERE user_id = #{userId} AND work_date BETWEEN #{from} AND #{to}")
+    int deleteByUserAndPeriod(@Param("userId") long userId, @Param("from") LocalDate from,
+            @Param("to") LocalDate to);
 }

@@ -5,6 +5,7 @@ import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.dto.RequestMonthView;
 import jp.bk.shiftmanager.exception.BusinessException;
 import jp.bk.shiftmanager.form.RequestMonthForm;
+import jp.bk.shiftmanager.service.PatternService;
 import jp.bk.shiftmanager.service.RequestService;
 import jp.bk.shiftmanager.util.TimeSlots;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +28,14 @@ public class RequestController {
     private static final String VIEW = "requests/month";
 
     private final RequestService requestService;
+    private final PatternService patternService;
 
     @GetMapping
     public String show(@AuthenticationPrincipal LoginUser me, @RequestParam(required = false) String month,
             Model model) {
         YearMonth target = requestService.resolveMonth(month);
         model.addAttribute("view", requestService.getMonth(me.getId(), target));
-        addOptions(model);
+        addOptions(model, me);
         return VIEW;
     }
 
@@ -49,7 +51,7 @@ public class RequestController {
             view.applyInput(form);
             model.addAttribute("view", view);
             model.addAttribute("error", e.getMessage());
-            addOptions(model);
+            addOptions(model, me);
             return VIEW;
         }
         redirectAttributes.addFlashAttribute("message", "登録しました");
@@ -57,7 +59,8 @@ public class RequestController {
         return "redirect:/requests";
     }
 
-    private void addOptions(Model model) {
+    private void addOptions(Model model, LoginUser me) {
         model.addAttribute("timeOptions", TimeSlots.OPTIONS);
+        model.addAttribute("patterns", patternService.findMine(me.getId()));
     }
 }

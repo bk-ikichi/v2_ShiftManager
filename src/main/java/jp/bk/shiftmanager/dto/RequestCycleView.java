@@ -14,5 +14,7 @@ public class RequestCycleView {
     private String deadlineLabel;
     /** 締切前でスタッフが編集できるか */
     private boolean open;
+    /** 「この期間は出勤できない」にチェックしているか */
+    private boolean unavailable;
     private List<RequestDayView> days;
 }

@@ -10,4 +10,6 @@ public class RequestMonthForm {
     /** yyyy-MM */
     private String month;
     private List<RequestDayForm> days = new ArrayList<>();
+    /** 「この期間は出勤できない」にチェックしたサイクルの開始日（yyyy-MM-dd）。締切前のサイクルだけが送信される */
+    private List<String> unavailableCycles = new ArrayList<>();
 }

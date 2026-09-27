@@ -94,4 +94,9 @@ public class TestData {
         jdbc.update("INSERT INTO shift_requests (user_id, work_date, start_time, end_time, note) "
                 + "VALUES (?, ?, ?::time, ?::time, ?)", user.getId(), date, start, end, note);
     }
+
+    /** 「この期間は出勤できない」にする */
+    public void unavailable(User user, LocalDate cycleStart) {
+        jdbc.update("INSERT INTO cycle_unavailable (user_id, cycle_start) VALUES (?, ?)", user.getId(), cycleStart);
+    }
 }

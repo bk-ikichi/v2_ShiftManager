@@ -24,4 +24,8 @@ public class ShiftRequestRepository {
     public void delete(long userId, LocalDate date) {
         shiftRequestMapper.delete(userId, date);
     }
+
+    public void deleteByUserAndPeriod(long userId, LocalDate from, LocalDate to) {
+        shiftRequestMapper.deleteByUserAndPeriod(userId, from, to);
+    }
 }

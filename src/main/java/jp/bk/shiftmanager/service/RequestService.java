@@ -5,8 +5,10 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import jp.bk.shiftmanager.dto.RequestCycleView;
@@ -17,6 +19,7 @@ import jp.bk.shiftmanager.exception.BusinessException;
 import jp.bk.shiftmanager.form.RequestDayForm;
 import jp.bk.shiftmanager.form.RequestMonthForm;
 import jp.bk.shiftmanager.repository.AppSettingRepository;
+import jp.bk.shiftmanager.repository.CycleUnavailableRepository;
 import jp.bk.shiftmanager.repository.ShiftRequestRepository;
 import jp.bk.shiftmanager.util.Cycle;
 import jp.bk.shiftmanager.util.DateLabels;
@@ -37,6 +40,7 @@ public class RequestService {
     private final Clock clock;
     private final AppSettingRepository appSettingRepository;
     private final ShiftRequestRepository shiftRequestRepository;
+    private final CycleUnavailableRepository cycleUnavailableRepository;
 
     /** スタッフが申請できる月（今月〜翌々月） */
     public List<YearMonth> requestMonths() {
@@ -67,6 +71,8 @@ public class RequestService {
         Map<LocalDate, ShiftRequest> requests = shiftRequestRepository
                 .findByUserAndPeriod(userId, month.atDay(1), month.atEndOfMonth()).stream()
                 .collect(Collectors.toMap(ShiftRequest::getWorkDate, request -> request));
+        Set<LocalDate> unavailable = new HashSet<>(
+                cycleUnavailableRepository.findStarts(userId, month.atDay(1), month.atEndOfMonth()));
 
         int index = 0;
         List<RequestCycleView> cycles = new ArrayList<>();
@@ -76,6 +82,7 @@ public class RequestService {
             cycleView.setLabel(cycle.label());
             cycleView.setDeadlineLabel(DateLabels.monthDayWeek(cycle.deadline(daysBefore)));
             cycleView.setOpen(cycle.isOpen(today, daysBefore));
+            cycleView.setUnavailable(unavailable.contains(cycle.start()));
             List<RequestDayView> days = new ArrayList<>();
             for (LocalDate date : cycle.dates()) {
                 RequestDayView day = new RequestDayView();
@@ -105,7 +112,8 @@ public class RequestService {
 
     /**
      * 1か月分の申請を一括保存する。1件でも不正があれば何も保存しない。
-     * 時刻も備考も空の日は申請を削除する。送信されなかった日は変更しない
+     * 時刻も備考も空の日は申請を削除する。送信されなかった日は変更しない。
+     * 「この期間は出勤できない」は締切前のサイクルだけ反映する
      */
     @Transactional
     public void saveMonth(long userId, RequestMonthForm form) {
@@ -117,6 +125,7 @@ public class RequestService {
         for (LocalDate date : inputs.keySet()) {
             checkOpen(Cycle.of(date), today, daysBefore);
         }
+        Set<LocalDate> unavailableStarts = parseUnavailable(form, month, today, daysBefore);
 
         // 先に全件を検証し、すべて正しい場合だけ保存する
         List<ShiftRequest> saves = new ArrayList<>();
@@ -124,6 +133,11 @@ public class RequestService {
         for (Map.Entry<LocalDate, RequestDayForm> entry : inputs.entrySet()) {
             LocalDate date = entry.getKey();
             RequestDayForm input = entry.getValue();
+            Cycle cycle = Cycle.of(date);
+            if (unavailableStarts.contains(cycle.start()) && hasInput(input)) {
+                throw new BusinessException(
+                        cycle.label() + "は「この期間は出勤できない」にチェックがあるため、申請を入力できません");
+            }
             try {
                 if (!hasInput(input)) {
                     deletes.add(date);
@@ -132,6 +146,19 @@ public class RequestService {
                 }
             } catch (BusinessException e) {
                 throw new BusinessException(DateLabels.monthDay(date) + "：" + e.getMessage());
+            }
+        }
+
+        for (Cycle cycle : Cycle.ofMonth(month)) {
+            if (!cycle.isOpen(today, daysBefore)) {
+                continue;
+            }
+            if (unavailableStarts.contains(cycle.start())) {
+                // 出勤できない期間には申請を持たない
+                cycleUnavailableRepository.insert(userId, cycle.start());
+                shiftRequestRepository.deleteByUserAndPeriod(userId, cycle.start(), cycle.end());
+            } else {
+                cycleUnavailableRepository.delete(userId, cycle.start());
             }
         }
         deletes.forEach(date -> shiftRequestRepository.delete(userId, date));
@@ -164,6 +191,22 @@ public class RequestService {
             inputs.put(date, input);
         }
         return inputs;
+    }
+
+    /** チェックされたサイクルの開始日。対象月の締切前のサイクルの開始日だけを受け付ける */
+    private Set<LocalDate> parseUnavailable(RequestMonthForm form, YearMonth month, LocalDate today,
+            int daysBefore) {
+        Set<LocalDate> starts = new HashSet<>();
+        for (String text : form.getUnavailableCycles()) {
+            LocalDate start = parseDate(text);
+            Cycle cycle = Cycle.of(start);
+            if (!cycle.start().equals(start) || !YearMonth.from(start).equals(month)) {
+                throw new BusinessException(INVALID_DATE);
+            }
+            checkOpen(cycle, today, daysBefore);
+            starts.add(start);
+        }
+        return starts;
     }
 
     private LocalDate parseDate(String text) {
