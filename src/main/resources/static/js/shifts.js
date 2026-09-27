@@ -30,24 +30,18 @@
   const refreshRow = (row) => {
     const userId = row.querySelector('select[data-user]').value;
     const request = requests.get(userId);
-    const noteButton = row.querySelector('[data-note-button]');
     const note = row.querySelector('[data-note]');
     const warning = row.querySelector('[data-warning]');
     if (!userId) {
       row.querySelector('[data-request-start]').textContent = '';
       row.querySelector('[data-request-end]').textContent = '';
-      noteButton.hidden = true;
-      note.hidden = true;
+      note.textContent = '';
       warning.textContent = '';
       return;
     }
     row.querySelector('[data-request-start]').textContent = request ? request.start : '--:--';
     row.querySelector('[data-request-end]').textContent = request ? request.end : '--:--';
     note.textContent = request ? request.note : '';
-    noteButton.hidden = !(request && request.note);
-    if (noteButton.hidden) {
-      note.hidden = true;
-    }
     warning.textContent = warningOf(request, row.querySelector('select[data-in]').value,
       row.querySelector('select[data-out]').value);
   };
@@ -69,10 +63,6 @@
         refreshRow(row);
         refreshDuplicates();
       });
-    });
-    row.querySelector('[data-note-button]').addEventListener('click', () => {
-      const note = row.querySelector('[data-note]');
-      note.hidden = !note.hidden;
     });
     // 名前・IN・OUTを空にする（空の行は登録時に削除される）
     row.querySelector('[data-clear]').addEventListener('click', () => {

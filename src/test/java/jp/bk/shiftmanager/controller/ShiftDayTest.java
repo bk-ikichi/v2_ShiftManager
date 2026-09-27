@@ -149,6 +149,15 @@ class ShiftDayTest extends IntegrationTestBase {
         ShiftRowView hanakoRow = view.getGroups().get(1).getRows().get(0);
         assertThat(hanakoRow.getRequestNote()).isNull();
         assertThat(hanakoRow.getWarning()).isNull();
+
+        // 備考は「備考」列に常に表示し（※のアイコンは使わない）、警告は名前の真下に出す
+        mvc.perform(get("/admin/shifts").param("date", "2026-10-02").with(user(admin)))
+                .andExpect(content().string(Matchers.containsString(">備考</th>")))
+                .andExpect(content().string(Matchers.matchesRegex(
+                        "(?s).*<td [^>]*data-note[^>]*>早めに上がりたい</td>.*")))
+                .andExpect(content().string(Matchers.matchesRegex(
+                        "(?s).*</select>\\s*<!--[^>]*-->\\s*<p data-warning[^>]*>申請の時間外です</p>\\s*</td>.*")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("※"))));
     }
 
     @Test

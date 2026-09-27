@@ -16,6 +16,8 @@
                   th:selected="${row != null and c.userId == row.userId}">佐藤花子</option>
         </optgroup>
       </select>
+      <!-- 申請との差分の警告は名前の真下に出す -->
+      <p data-warning class="px-1 text-xs text-red-700" th:text="${row?.warning}"></p>
     </td>
     <td class="p-1">
       <select th:name="|rows[${index}].startTime|" data-in class="input mt-0 px-1" aria-label="IN">
@@ -33,12 +35,8 @@
     </td>
     <td class="px-2 py-3 text-center text-stone-600" data-request-start th:text="${row?.requestStart}">08:00</td>
     <td class="px-2 py-3 text-center text-stone-600" data-request-end th:text="${row?.requestEnd}">18:00</td>
-    <td class="px-2 py-3">
-      <button type="button" data-note-button class="font-bold text-amber-700" aria-label="申請の備考を表示"
-              th:hidden="${row == null or row.requestNote == null}">※</button>
-      <p data-note class="text-xs text-stone-700" hidden th:text="${row?.requestNote}"></p>
-      <p data-warning class="text-xs text-red-700" th:text="${row?.warning}"></p>
-    </td>
+    <!-- 申請の備考は常に表示する -->
+    <td class="w-64 px-2 py-3 text-xs text-stone-700" data-note th:text="${row?.requestNote}"></td>
     <td class="px-2 py-3 text-right">
       <button type="button" data-clear class="text-xs text-stone-500 underline">クリア</button>
     </td>
