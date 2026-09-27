@@ -82,7 +82,7 @@ src/test/java/jp/bk/shiftmanager/
   - `DailyShiftService#resolveDate(String): LocalDate`、`#getDay(LocalDate date, long viewerId, boolean admin): DailyShiftView`
   - `GET /shifts?date=yyyy-MM-dd`（モデル属性 `view`）。Task 2・3のトップ画面から日付ごとにリンクする
 
-- [ ] **Step 1: 時間帯の表示の失敗するテストを書く**
+- [x] **Step 1: 時間帯の表示の失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/util/TimeSlotsTest.java` のクラス末尾に追加する：
 
@@ -93,7 +93,7 @@ src/test/java/jp/bk/shiftmanager/
     }
 ```
 
-- [ ] **Step 2: 日別一覧の失敗するテストを書く**
+- [x] **Step 2: 日別一覧の失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/DailyShiftTest.java`：
 
@@ -272,12 +272,12 @@ class DailyShiftTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 3: テストが失敗することを確認する**
+- [x] **Step 3: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=TimeSlotsTest,DailyShiftTest`
 Expected: FAIL（コンパイルエラー：`formatRange`・`DailyShiftView` 等が存在しない）
 
-- [ ] **Step 4: `TimeSlots.formatRange` を追加する**
+- [x] **Step 4: `TimeSlots.formatRange` を追加する**
 
 `src/main/java/jp/bk/shiftmanager/util/TimeSlots.java` の `format` の下に追加する：
 
@@ -288,7 +288,7 @@ Expected: FAIL（コンパイルエラー：`formatRange`・`DailyShiftView` 等
     }
 ```
 
-- [ ] **Step 5: DTOを作る**
+- [x] **Step 5: DTOを作る**
 
 `src/main/java/jp/bk/shiftmanager/dto/DailyShiftView.java`：
 
@@ -356,7 +356,7 @@ public class DailyShiftRow {
 }
 ```
 
-- [ ] **Step 6: `DailyShiftService` を作る**
+- [x] **Step 6: `DailyShiftService` を作る**
 
 `src/main/java/jp/bk/shiftmanager/service/DailyShiftService.java`：
 
@@ -469,7 +469,7 @@ public class DailyShiftService {
 }
 ```
 
-- [ ] **Step 7: `DailyShiftController` を作る**
+- [x] **Step 7: `DailyShiftController` を作る**
 
 `src/main/java/jp/bk/shiftmanager/controller/DailyShiftController.java`：
 
@@ -505,7 +505,7 @@ public class DailyShiftController {
 }
 ```
 
-- [ ] **Step 8: 画面を作り、ヘッダーに「シフト」を追加する**
+- [x] **Step 8: 画面を作り、ヘッダーに「シフト」を追加する**
 
 `src/main/resources/templates/shifts/day.html`：
 
@@ -553,7 +553,7 @@ public class DailyShiftController {
     <a th:href="@{/shifts}" class="hover:underline">シフト</a>
 ```
 
-- [ ] **Step 9: テストが通ることを確認する**
+- [x] **Step 9: テストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=TimeSlotsTest,DailyShiftTest`
 Expected: PASS
@@ -566,7 +566,7 @@ Expected: PASS
 - スマートフォン幅（375px）で横スクロールが出ない
 - スタッフは7日前より前へ移動するリンクが出ない。管理者は出て、「この日を転記画面で開く」が表示される
 
-- [ ] **Step 11: 全テストを実行してコミットする**
+- [x] **Step 11: 全テストを実行してコミットする**
 
 Run: `./mvnw test`
 Expected: PASS
@@ -578,7 +578,7 @@ git commit -m "feat: 公開済みシフトの日別一覧
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 12: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
+- [x] **Step 12: この計画ファイルのTask 1のチェックボックスをすべて `[x]` にしてコミットし、停止してユーザーに報告する**
 
 ```bash
 git add docs/superpowers/plans/2026-09-28-plan4-viewing.md
