@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('シフト')}"></head>
+<body class="min-h-screen bg-stone-50 text-stone-900">
+<header th:replace="~{layout :: header}"></header>
+<main class="mx-auto max-w-5xl px-4 py-6">
+  <div class="mb-4 flex items-center justify-between gap-2">
+    <a th:if="${view.previousVisible}" th:href="@{/shifts(date=${view.previousDate})}"
+       class="btn-secondary px-3 py-1 text-sm">&lt; <span th:text="${view.previousLabel}">10/1（木）</span></a>
+    <span th:unless="${view.previousVisible}" class="w-20"></span>
+    <h1 class="text-lg font-bold" th:text="${view.dateLabel}">10/2（金）</h1>
+    <a th:href="@{/shifts(date=${view.nextDate})}"
+       class="btn-secondary px-3 py-1 text-sm"><span th:text="${view.nextLabel}">10/3（土）</span> &gt;</a>
+  </div>
+  <div th:replace="~{layout :: flash}"></div>
+  <p th:if="${view.message}" th:text="${view.message}" class="card text-sm text-stone-600">
+    この日のシフトはまだ公開されていません</p>
+
+  <section th:each="g : ${view.groups}" class="mb-4">
+    <h2 class="mb-2 font-bold" th:text="${g.positionName}">キッチン</h2>
+    <ul class="divide-y divide-stone-200 rounded-lg border border-stone-200 bg-white">
+      <li th:each="r : ${g.rows}" class="flex items-center justify-between gap-2 px-4 py-3"
+          th:classappend="${r.mine} ? 'bg-amber-50 font-bold'">
+        <span th:text="${r.name}">山田太郎</span>
+        <span class="tabular-nums" th:text="${r.timeLabel}">09:00〜17:00</span>
+      </li>
+    </ul>
+  </section>
+
+  <p th:if="${view.admin}" class="mt-4 text-sm">
+    <a th:href="@{/admin/shifts(date=${view.date})}" class="underline">この日を転記画面で開く</a>
+  </p>
+</main>
+</body>
+</html>

@@ -35,4 +35,9 @@ class TimeSlotsTest {
                     .hasMessage("時刻は8:00〜23:00の30分刻みで選択してください");
         }
     }
+
+    @Test
+    void 時間帯を表示用の文字列にする() {
+        assertThat(TimeSlots.formatRange(LocalTime.of(9, 0), LocalTime.of(17, 30))).isEqualTo("09:00〜17:30");
+    }
 }

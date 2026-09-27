@@ -45,4 +45,9 @@ public final class TimeSlots {
     public static String format(LocalTime time) {
         return time == null ? null : time.format(FORMAT);
     }
+
+    /** 例：09:00〜17:00 */
+    public static String formatRange(LocalTime start, LocalTime end) {
+        return format(start) + "〜" + format(end);
+    }
 }
