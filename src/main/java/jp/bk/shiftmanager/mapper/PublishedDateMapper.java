@@ -18,6 +18,10 @@ public interface PublishedDateMapper {
     @Insert("INSERT INTO published_dates (work_date) VALUES (#{date}) ON CONFLICT DO NOTHING")
     void insert(@Param("date") LocalDate date);
 
+    /** 公開済みの最後の日。1日もなければnull */
+    @Select("SELECT MAX(work_date) FROM published_dates")
+    LocalDate findLatest();
+
     /** 期間内の公開済みの日（日付順） */
     @Select("SELECT work_date FROM published_dates WHERE work_date BETWEEN #{from} AND #{to} ORDER BY work_date")
     List<LocalDate> findBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);

@@ -17,6 +17,8 @@ public class DailyShiftView {
     private boolean previousVisible;
     private LocalDate nextDate;
     private String nextLabel;
+    /** 次の日へ移動できるか（スタッフは公開済みの最後の日より先へ移動できない） */
+    private boolean nextVisible;
     /** 一覧を表示できない理由、または出勤者がいない旨（一覧を表示するときはnull） */
     private String message;
     /** ポジションの表示順。出勤者のいないポジションは含めない */

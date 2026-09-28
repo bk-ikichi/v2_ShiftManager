@@ -47,10 +47,12 @@ public class DailyShiftService {
 
     /**
      * 1日分の一覧。公開済みの日だけ全員分を表示する。
-     * スタッフは前月1日より前の日を閲覧できない（管理者は閲覧できる）
+     * スタッフは前月1日より前の日と、公開済みの最後の日より先の日を閲覧できない（管理者は閲覧できる）
      */
     public DailyShiftView getDay(LocalDate date, long viewerId, boolean admin) {
         LocalDate oldest = ViewRange.staffOldest(LocalDate.now(clock));
+        // 公開済みの日が1日もなければ、スタッフはどの日も閲覧できない
+        LocalDate latest = publishedDateRepository.findLatest().orElse(LocalDate.MIN);
         DailyShiftView view = new DailyShiftView();
         view.setDate(date);
         view.setDateLabel(DateLabels.monthDayWeek(date));
@@ -59,10 +61,15 @@ public class DailyShiftService {
         view.setPreviousVisible(admin || !date.minusDays(1).isBefore(oldest));
         view.setNextDate(date.plusDays(1));
         view.setNextLabel(DateLabels.monthDayWeek(date.plusDays(1)));
+        view.setNextVisible(admin || !date.plusDays(1).isAfter(latest));
         view.setAdmin(admin);
 
         if (!admin && date.isBefore(oldest)) {
             view.setMessage("先月より前のシフトは表示できません");
+            return view;
+        }
+        if (!admin && date.isAfter(latest)) {
+            view.setMessage("閲覧可能なシフトはありません");
             return view;
         }
         if (!publishedDateRepository.isPublished(date)) {

@@ -25,6 +25,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class DailyShiftTest extends IntegrationTestBase {
 
     private static final LocalDate OCT2 = LocalDate.of(2026, 10, 2);
+    private static final LocalDate OCT4 = LocalDate.of(2026, 10, 4);
+    private static final LocalDate OCT5 = LocalDate.of(2026, 10, 5);
     /** 前月1日（スタッフが閲覧できる最も古い日） */
     private static final LocalDate AUG1 = LocalDate.of(2026, 8, 1);
     private static final LocalDate JUL31 = LocalDate.of(2026, 7, 31);
@@ -84,8 +86,9 @@ class DailyShiftTest extends IntegrationTestBase {
     }
 
     @Test
-    void 未公開の日のシフトは表示しない() throws Exception {
+    void 公開済みの最後の日より手前の未公開の日はシフトを表示せず次の日へ進める() throws Exception {
         data.shift(taro, kitchen, OCT2, "08:00", "17:00");
+        data.publish(OCT4);
 
         MvcResult result = mvc.perform(get("/shifts").param("date", "2026-10-02").with(user(data.login(hanako))))
                 .andExpect(status().isOk())
@@ -95,6 +98,48 @@ class DailyShiftTest extends IntegrationTestBase {
 
         DailyShiftView view = (DailyShiftView) result.getModelAndView().getModel().get("view");
         assertThat(view.getGroups()).isEmpty();
+        assertThat(view.isNextVisible()).isTrue();
+    }
+
+    @Test
+    void スタッフは公開済みの最後の日まで進め_その先は閲覧可能なシフトがない旨を表示する() throws Exception {
+        data.shift(taro, kitchen, OCT4, "08:00", "17:00");
+        data.shift(taro, kitchen, OCT5, "08:00", "17:00");
+        data.publish(OCT4);
+        LoginUser me = data.login(taro);
+
+        DailyShiftView last = view(me, "2026-10-04");
+        assertThat(last.getGroups()).hasSize(1);
+        assertThat(last.isNextVisible()).isFalse();
+
+        // URLで直接指定しても表示しない
+        MvcResult result = mvc.perform(get("/shifts").param("date", "2026-10-05").with(user(me)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("閲覧可能なシフトはありません")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("href=\"/shifts?date=2026-10-06\""))))
+                .andReturn();
+        DailyShiftView beyond = (DailyShiftView) result.getModelAndView().getModel().get("view");
+        assertThat(beyond.getGroups()).isEmpty();
+        assertThat(beyond.isNextVisible()).isFalse();
+        assertThat(beyond.isPreviousVisible()).isTrue();
+    }
+
+    @Test
+    void 公開済みの日が1日もなければスタッフには閲覧可能なシフトがない旨を表示する() throws Exception {
+        DailyShiftView view = view(data.login(taro), null);
+
+        assertThat(view.getMessage()).isEqualTo("閲覧可能なシフトはありません");
+        assertThat(view.isNextVisible()).isFalse();
+    }
+
+    @Test
+    void 管理者は公開済みの最後の日より先へも進める() throws Exception {
+        data.publish(OCT4);
+
+        DailyShiftView view = view(admin, "2026-10-05");
+
+        assertThat(view.getMessage()).isEqualTo("この日のシフトはまだ公開されていません");
+        assertThat(view.isNextVisible()).isTrue();
     }
 
     @Test

@@ -9,8 +9,9 @@
        class="btn-secondary px-3 py-1 text-sm">&lt; <span th:text="${view.previousLabel}">10/1（木）</span></a>
     <span th:unless="${view.previousVisible}" class="w-20"></span>
     <h1 class="text-lg font-bold" th:text="${view.dateLabel}">10/2（金）</h1>
-    <a th:href="@{/shifts(date=${view.nextDate})}"
+    <a th:if="${view.nextVisible}" th:href="@{/shifts(date=${view.nextDate})}"
        class="btn-secondary px-3 py-1 text-sm"><span th:text="${view.nextLabel}">10/3（土）</span> &gt;</a>
+    <span th:unless="${view.nextVisible}" class="w-20"></span>
   </div>
   <div th:replace="~{layout :: flash}"></div>
   <p th:if="${view.message}" th:text="${view.message}" class="card text-sm text-stone-600">
