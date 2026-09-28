@@ -3,9 +3,9 @@
 <head th:replace="~{layout :: head('シフト希望の申請')}"></head>
 <body class="min-h-screen bg-stone-50 text-stone-900">
 <header th:replace="~{layout :: header}"></header>
-<main class="mx-auto max-w-md px-4 pb-28 pt-4">
+<main class="mx-auto max-w-md px-4 pb-28 pt-4 lg:max-w-7xl">
   <h1 class="mb-3 text-lg font-bold">シフト希望の申請</h1>
-  <nav class="mb-4 flex gap-2">
+  <nav class="mb-4 flex gap-2 lg:max-w-md">
     <a th:each="m : ${view.months}" th:href="@{/requests(month=${m})}" th:text="|${m.monthValue}月|" data-month-link
        class="flex-1 rounded border px-3 py-2 text-center"
        th:classappend="${m == view.month} ? 'border-amber-700 bg-amber-700 font-bold text-white' : 'border-stone-300 bg-white'">10月</a>
@@ -17,6 +17,8 @@
 
   <form id="request-form" th:action="@{/requests}" method="post">
     <input type="hidden" name="month" th:value="${view.month}">
+    <!-- PCでは期間ごとに横3列で並べる -->
+    <div class="lg:grid lg:grid-cols-3 lg:items-start lg:gap-6">
     <section th:each="c : ${view.cycles}" class="mb-6" data-cycle>
       <div class="mb-2 flex items-baseline justify-between">
         <h2 class="font-bold" th:text="${c.label}">10/11〜10/20</h2>
@@ -34,8 +36,8 @@
              th:classappend="${c.open} ? '' : 'bg-stone-200 text-stone-500'">
           <th:block th:if="${d.index != null}">
             <input type="hidden" th:name="|days[${d.index}].date|" th:value="${d.date}">
-            <div class="grid grid-cols-[3rem_1fr_1fr_1fr] items-center gap-1">
-              <span class="text-sm" th:text="${d.label}">3（土）</span>
+            <div class="grid grid-cols-[4rem_1fr_1fr_1fr] items-center gap-1">
+              <span class="whitespace-nowrap text-sm" th:text="${d.label}">3（土）</span>
               <select data-pattern class="input mt-0 px-1" aria-label="パターン">
                 <option value="">パターン</option>
                 <option th:each="p : ${patterns}" th:text="${p.name}"
@@ -57,8 +59,8 @@
                    class="input py-1">
           </th:block>
           <th:block th:if="${d.index == null}">
-            <div class="grid grid-cols-[3rem_1fr_1fr_1fr] items-center gap-1 text-sm">
-              <span th:text="${d.label}">3（土）</span>
+            <div class="grid grid-cols-[4rem_1fr_1fr_1fr] items-center gap-1 text-sm">
+              <span class="whitespace-nowrap" th:text="${d.label}">3（土）</span>
               <span></span>
               <span th:text="${d.startTime} ?: '--:--'">09:00</span>
               <span th:text="${d.endTime} ?: '--:--'">17:00</span>
@@ -68,10 +70,11 @@
         </div>
       </div>
     </section>
+    </div>
 
     <div class="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white p-3">
-      <div class="mx-auto max-w-md">
-        <button class="btn-primary w-full">登録する</button>
+      <div class="mx-auto max-w-md lg:flex lg:max-w-7xl lg:justify-end">
+        <button class="btn-primary w-full lg:w-auto lg:px-8">登録する</button>
       </div>
     </div>
   </form>
