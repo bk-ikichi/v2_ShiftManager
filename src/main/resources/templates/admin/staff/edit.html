@@ -36,9 +36,13 @@
   </form>
 
   <h2 class="mb-2 font-bold">パスワードのリセット</h2>
+  <div th:if="${tempPassword}" class="mb-3 rounded bg-green-50 p-3 text-sm text-green-800">
+    <p>仮パスワードにリセットしました。本人に伝えてください。</p>
+    <p class="my-2 font-mono text-2xl font-bold tracking-widest text-stone-900" th:text="${tempPassword}"></p>
+    <p>この画面を離れると再表示できません。わからなくなった場合はもう一度リセットしてください。</p>
+  </div>
   <form th:action="@{/admin/staff/{id}/password(id=${id})}" method="post" class="card space-y-3">
-    <p class="text-sm text-stone-600">仮パスワードを設定します。本人は次回ログイン時に変更が必要になります。</p>
-    <input name="tempPassword" autocomplete="off" placeholder="仮パスワード（半角8〜72文字）" class="input">
+    <p class="text-sm text-stone-600">仮パスワードを自動で作成します。本人は次回ログイン時に変更が必要になります。</p>
     <button class="btn-secondary">リセットする</button>
   </form>
 </main>
