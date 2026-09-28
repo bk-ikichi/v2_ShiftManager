@@ -79,7 +79,7 @@ README.md                              ローカル起動時に STAFF_INITIAL_PA
   - `StaffService.resetPassword(long id)`：`String`（生成した仮パスワード）
   - フラッシュ属性 `tempPassword`（`POST /admin/staff/{id}/password` のリダイレクト先で使う）
 
-- [ ] **Step 1: 失敗するテストを書く（部品の単体テスト）**
+- [x] **Step 1: 失敗するテストを書く（部品の単体テスト）**
 
 `src/test/java/jp/bk/shiftmanager/auth/TempPasswordsTest.java`
 
@@ -153,12 +153,12 @@ class StaffInitialPasswordTest {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=TempPasswordsTest,StaffInitialPasswordTest`
 Expected: コンパイルエラー（`TempPasswords`・`StaffInitialPassword` が存在しない）
 
-- [ ] **Step 3: 部品を実装する**
+- [x] **Step 3: 部品を実装する**
 
 `src/main/java/jp/bk/shiftmanager/auth/TempPasswords.java`
 
@@ -234,12 +234,12 @@ app:
   staff-initial-password: testinit1
 ```
 
-- [ ] **Step 4: 部品のテストが通ることを確認する**
+- [x] **Step 4: 部品のテストが通ることを確認する**
 
 Run: `./mvnw test -Dtest=TempPasswordsTest,StaffInitialPasswordTest`
 Expected: PASS（6件）
 
-- [ ] **Step 5: 失敗するテストを書く（StaffAdminTest の変更）**
+- [x] **Step 5: 失敗するテストを書く（StaffAdminTest の変更）**
 
 `src/test/java/jp/bk/shiftmanager/controller/StaffAdminTest.java` を以下のとおり変更する。
 
@@ -326,12 +326,12 @@ import org.springframework.test.web.servlet.MvcResult;
 
 既存の `全角を含む初期パスワードは登録できない` はそのまま残す（入力した場合のルールは変わらない）。
 
-- [ ] **Step 6: テストが失敗することを確認する**
+- [x] **Step 6: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=StaffAdminTest`
 Expected: FAIL。空欄・未送信の登録はバリデーションエラーで `admin/staff/new` を返す。リセットは `tempPassword` パラメータ不足で400になる。編集画面に仮パスワードが表示されない
 
-- [ ] **Step 7: フォーム・サービス・コントローラーを実装する**
+- [x] **Step 7: フォーム・サービス・コントローラーを実装する**
 
 `src/main/java/jp/bk/shiftmanager/form/StaffCreateForm.java`
 
@@ -421,7 +421,7 @@ import jp.bk.shiftmanager.auth.TempPasswords;
     }
 ```
 
-- [ ] **Step 8: 画面を変更する**
+- [x] **Step 8: 画面を変更する**
 
 `src/main/resources/templates/admin/staff/new.html` の初期パスワード欄を置き換え：
 
@@ -448,7 +448,7 @@ import jp.bk.shiftmanager.auth.TempPasswords;
   </form>
 ```
 
-- [ ] **Step 9: README を更新する**
+- [x] **Step 9: README を更新する**
 
 `README.md` の「ローカルでの起動」を以下に置き換える（実際の固定値は書かない）：
 
@@ -465,18 +465,18 @@ $env:STAFF_INITIAL_PASSWORD = "（共通の初期パスワード）"
 ```
 ````
 
-- [ ] **Step 10: 全テストが通ることを確認する**
+- [x] **Step 10: 全テストが通ることを確認する**
 
 Run: `./mvnw test`
 Expected: 全件 PASS（Docker Desktop の起動が必要）
 
-- [ ] **Step 11: ブラウザで確認する（ユーザーに依頼）**
+- [x] **Step 11: ブラウザで確認する（ユーザーに依頼）**
 
 環境変数を設定して起動し、以下をユーザーに確認してもらう。
 - 初期パスワードを空欄でスタッフを登録し、そのスタッフが共通の値でログインでき、パスワード変更画面に移ること
 - 編集画面で「リセットする」を押すと仮パスワードが大きく表示され、そのパスワードでログインできること。再読み込みすると表示が消えること
 
-- [ ] **Step 12: コミットしてチェックボックスを更新する**
+- [x] **Step 12: コミットしてチェックボックスを更新する**
 
 ```bash
 git add src/main/java/jp/bk/shiftmanager/auth/StaffInitialPassword.java \
