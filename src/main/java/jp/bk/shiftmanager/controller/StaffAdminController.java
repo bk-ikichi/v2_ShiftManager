@@ -85,11 +85,10 @@ public class StaffAdminController {
     }
 
     @PostMapping("/{id}/password")
-    public String resetPassword(@PathVariable long id, @RequestParam String tempPassword,
-            RedirectAttributes redirectAttributes) {
+    public String resetPassword(@PathVariable long id, RedirectAttributes redirectAttributes) {
         try {
-            staffService.resetPassword(id, tempPassword);
-            redirectAttributes.addFlashAttribute("message", "仮パスワードにリセットしました。本人に伝えてください");
+            String tempPassword = staffService.resetPassword(id);
+            redirectAttributes.addFlashAttribute("tempPassword", tempPassword);
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

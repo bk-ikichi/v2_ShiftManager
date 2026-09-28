@@ -1,0 +1,3 @@
+app:
+  # テスト用の固定値（本番の値はここに書かない）
+  staff-initial-password: testinit1

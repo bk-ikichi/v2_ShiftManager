@@ -13,6 +13,8 @@ mybatis:
 app:
   # remember-me Cookieの署名鍵。本番では必ず環境変数で上書きする
   remember-me-key: ${REMEMBER_ME_KEY:dev-only-remember-me-key}
+  # スタッフ登録で初期パスワードを省略したときの共通の固定値。未設定だと起動しない
+  staff-initial-password: ${STAFF_INITIAL_PASSWORD}
 
 server:
   # HTTPS終端のリバースプロキシ配下でリダイレクト先をhttpsにするため

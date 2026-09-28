@@ -19,7 +19,10 @@ Java 17 / Spring Boot 4.1.1 / MyBatis / Spring Security / Thymeleaf / Tailwind C
 ## ローカルでの起動
 テストには Docker Desktop が必要（Testcontainers）。
 
+起動には環境変数 `STAFF_INITIAL_PASSWORD`（スタッフ登録で初期パスワードを省略したときの共通の値。半角8〜72文字）が必要。未設定だと起動しない。
+
 ```
 npm run build
+$env:STAFF_INITIAL_PASSWORD = "（共通の初期パスワード）"
 ./mvnw spring-boot:run
 ```

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MvcResult;
 
 class StaffAdminTest extends IntegrationTestBase {
 
@@ -69,6 +70,38 @@ class StaffAdminTest extends IntegrationTestBase {
         assertThat(hanako.isEnabled()).isTrue();
         assertThat(hanako.isMustChangePassword()).isTrue();
         assertThat(passwordEncoder.matches("initpass1", hanako.getPasswordHash())).isTrue();
+    }
+
+    @Test
+    void 初期パスワードを空欄で登録すると共通の固定値になり初回に変更が必要になる() throws Exception {
+        mvc.perform(post("/admin/staff").with(user(boss)).with(csrf())
+                        .param("loginId", "hanako").param("name", "佐藤花子").param("password", ""))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        User hanako = userMapper.findByLoginId("hanako");
+        assertThat(passwordEncoder.matches("testinit1", hanako.getPasswordHash())).isTrue();
+        assertThat(hanako.isMustChangePassword()).isTrue();
+    }
+
+    @Test
+    void 初期パスワードの項目自体を送らなくても共通の固定値で登録できる() throws Exception {
+        mvc.perform(post("/admin/staff").with(user(boss)).with(csrf())
+                        .param("loginId", "hanako").param("name", "佐藤花子"))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        User hanako = userMapper.findByLoginId("hanako");
+        assertThat(passwordEncoder.matches("testinit1", hanako.getPasswordHash())).isTrue();
+    }
+
+    @Test
+    void 初期パスワードを入力した場合は固定値ではなく入力した値になる() throws Exception {
+        mvc.perform(post("/admin/staff").with(user(boss)).with(csrf())
+                        .param("loginId", "hanako").param("name", "佐藤花子").param("password", "initpass1"))
+                .andExpect(redirectedUrl("/admin/staff"));
+
+        User hanako = userMapper.findByLoginId("hanako");
+        assertThat(passwordEncoder.matches("initpass1", hanako.getPasswordHash())).isTrue();
+        assertThat(passwordEncoder.matches("testinit1", hanako.getPasswordHash())).isFalse();
     }
 
     @Test
@@ -137,27 +170,38 @@ class StaffAdminTest extends IntegrationTestBase {
     }
 
     @Test
-    void パスワードをリセットすると仮パスワードが有効になり次回変更が必要になる() throws Exception {
+    void パスワードをリセットすると生成された仮パスワードが有効になり次回変更が必要になる() throws Exception {
         User taro = data.user("taro", "山田太郎", false);
 
-        mvc.perform(post("/admin/staff/{id}/password", taro.getId()).with(user(boss)).with(csrf())
-                        .param("tempPassword", "temppass1"))
-                .andExpect(redirectedUrl("/admin/staff/" + taro.getId() + "/edit"));
+        MvcResult result = mvc.perform(post("/admin/staff/{id}/password", taro.getId()).with(user(boss)).with(csrf()))
+                .andExpect(redirectedUrl("/admin/staff/" + taro.getId() + "/edit"))
+                .andExpect(flash().attributeExists("tempPassword"))
+                .andReturn();
 
+        String tempPassword = (String) result.getFlashMap().get("tempPassword");
+        assertThat(tempPassword).matches("[a-z2-9]{8}");
         User updated = userMapper.findById(taro.getId());
-        assertThat(passwordEncoder.matches("temppass1", updated.getPasswordHash())).isTrue();
+        assertThat(passwordEncoder.matches(tempPassword, updated.getPasswordHash())).isTrue();
         assertThat(updated.isMustChangePassword()).isTrue();
     }
 
     @Test
-    void 仮パスワードが短いとリセットされない() throws Exception {
+    void リセット後の編集画面に仮パスワードが表示される() throws Exception {
         User taro = data.user("taro", "山田太郎", false);
 
-        mvc.perform(post("/admin/staff/{id}/password", taro.getId()).with(user(boss)).with(csrf())
-                        .param("tempPassword", "short"))
-                .andExpect(flash().attributeExists("error"));
+        mvc.perform(get("/admin/staff/{id}/edit", taro.getId()).with(user(boss))
+                        .flashAttr("tempPassword", "abcd2345"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("abcd2345")))
+                .andExpect(content().string(Matchers.containsString("再表示できません")));
+    }
 
-        assertThat(userMapper.findById(taro.getId()).isMustChangePassword()).isFalse();
+    @Test
+    void 存在しないスタッフはリセットできずエラーを表示する() throws Exception {
+        mvc.perform(post("/admin/staff/{id}/password", 999999).with(user(boss)).with(csrf()))
+                .andExpect(redirectedUrl("/admin/staff/999999/edit"))
+                .andExpect(flash().attribute("error", "スタッフが見つかりません"))
+                .andExpect(flash().attributeCount(1));
     }
 
     @Test

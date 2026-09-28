@@ -29,7 +29,7 @@
       管理者権限を付ける
     </label>
     <label class="block">
-      <span class="text-sm">初期パスワード（半角英数字記号 8〜72文字）</span>
+      <span class="text-sm">初期パスワード（空欄なら共通の初期パスワード。入力する場合は半角英数字記号 8〜72文字）</span>
       <input th:field="*{password}" autocomplete="off" class="input">
       <span th:errors="*{password}" class="text-sm text-red-700"></span>
     </label>
