@@ -26,3 +26,23 @@ npm run build
 $env:STAFF_INITIAL_PASSWORD = "（共通の初期パスワード）"
 ./mvnw spring-boot:run
 ```
+
+## 本番環境（Render + Neon）
+- アプリ：Render の Web Service（Language：Docker、Branch：`main`、Region：Singapore）。ルートの `Dockerfile` でビルドする
+- DB：Neon（PostgreSQL 17、Region：AWS Asia Pacific (Singapore)）。Connection pooling はオフ（`-pooler` なしのホスト）で接続する
+- `main` へのpush（PRのマージ）で自動デプロイされる。DBの変更は `src/main/resources/db/migration/` にマイグレーションを追加すれば起動時に反映される
+- 初回起動時、ユーザーが1人もいなければ初期管理者 `admin / admin` が作られる。デプロイ直後にログインしてパスワードを変更すること
+
+### 環境変数（Render で設定する）
+
+| キー | 値 |
+|---|---|
+| `DATABASE_URL` | `jdbc:postgresql://<Neonのホスト>/<DB名>?sslmode=require`（ユーザー名・パスワードは含めない） |
+| `DATABASE_USERNAME` | Neon のロール名 |
+| `DATABASE_PASSWORD` | Neon のロールのパスワード |
+| `REMEMBER_ME_KEY` | ログイン保持Cookieの署名鍵（ランダム文字列）。変更すると全員のログイン保持が無効になる |
+| `STAFF_INITIAL_PASSWORD` | スタッフの共通初期パスワード（半角8〜72文字） |
+| `PORT` | `8080` |
+| `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=75` |
+
+Neon の接続情報はコンソールの「Connect」で確認できる（コンソールへのログイン方法とは無関係）。
