@@ -65,6 +65,21 @@ class RequestUnavailableTest extends IntegrationTestBase {
     }
 
     @Test
+    void 前の期間にチェックして入力欄が送信されなくても登録できる() throws Exception {
+        // 画面ではチェックした期間の入力欄が無効になり送信されないため、days の番号が途中から始まる
+        mvc.perform(post("/requests").with(user(me)).with(csrf())
+                        .param("month", "2026-10")
+                        .param("unavailableCycles", "2026-10-01")
+                        .param("days[10].date", "2026-10-11").param("days[10].startTime", "09:00")
+                        .param("days[10].endTime", "17:00").param("days[10].note", ""))
+                .andExpect(redirectedUrl("/requests?month=2026-10"));
+
+        assertThat(cycleUnavailableMapper.findStarts(taro.getId(), OCT1, OCT31)).containsExactly(OCT1);
+        assertThat(shiftRequestMapper.findByUserAndPeriod(taro.getId(), OCT1, OCT31))
+                .extracting(ShiftRequest::getWorkDate).containsExactly(OCT11);
+    }
+
+    @Test
     void チェックを外すと解除される() throws Exception {
         data.unavailable(taro, OCT11);
 
