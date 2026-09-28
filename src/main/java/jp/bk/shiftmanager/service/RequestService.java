@@ -181,7 +181,8 @@ public class RequestService {
     private Map<LocalDate, RequestDayForm> parseDays(RequestMonthForm form, YearMonth month) {
         Map<LocalDate, RequestDayForm> inputs = new TreeMap<>();
         for (RequestDayForm input : form.getDays()) {
-            if (input == null) {
+            // 無効にした入力欄は送信されず番号が抜けるため、Springが空の要素で埋める。それは読み飛ばす
+            if (input == null || (input.getDate() == null && !hasInput(input))) {
                 continue;
             }
             LocalDate date = parseDate(input.getDate());

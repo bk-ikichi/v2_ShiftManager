@@ -12,25 +12,59 @@
   <meta name="theme-color" content="#b45309">
 </head>
 <body>
-<header th:fragment="header" class="border-b border-stone-200 bg-white">
-  <nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm">
-    <a th:href="@{/}" class="font-bold">シフト管理</a>
-    <a th:href="@{/shifts}" class="hover:underline">シフト</a>
-    <a th:href="@{/requests}" class="hover:underline">申請</a>
-    <th:block sec:authorize="hasRole('ADMIN')">
-      <a th:href="@{/admin/shifts}" class="hover:underline">転記</a>
-      <a th:href="@{/admin/requests}" class="hover:underline">申請一覧</a>
-      <a th:href="@{/admin/staff}" class="hover:underline">スタッフ</a>
-      <a th:href="@{/admin/positions}" class="hover:underline">ポジション</a>
-      <a th:href="@{/admin/settings}" class="hover:underline">設定</a>
-    </th:block>
-    <span class="ml-auto text-stone-500" sec:authentication="principal.name">名前</span>
-    <a th:href="@{/mypage}" class="hover:underline">マイページ</a>
-    <form th:action="@{/logout}" method="post">
-      <button class="hover:underline">ログアウト</button>
-    </form>
-  </nav>
+<!-- PC（lg以上）は横並び、スマホは右から出るメニュー。開閉はheaderのdata-open属性で切り替える（nav.js） -->
+<header th:fragment="header" id="site-header" class="group border-b border-stone-200 bg-white">
+  <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 text-base">
+    <a th:href="@{/}" class="shrink-0 text-xl font-bold">シフト管理</a>
+    <button type="button" data-nav-open aria-controls="site-nav" aria-expanded="false" aria-label="メニューを開く"
+            class="ml-auto rounded p-2 hover:bg-stone-100 lg:hidden">
+      <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+    <!-- スマホでメニューを開いたときの背景。押すと閉じる -->
+    <div data-nav-close class="fixed inset-0 z-40 hidden bg-black/40 max-lg:group-data-open:block"></div>
+    <nav id="site-nav" aria-label="メインメニュー"
+         class="flex gap-1
+                max-lg:invisible max-lg:fixed max-lg:inset-y-0 max-lg:right-0 max-lg:z-50 max-lg:w-72 max-lg:max-w-[85vw]
+                max-lg:translate-x-full max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-white max-lg:p-4 max-lg:shadow-xl
+                max-lg:transition-[transform,visibility] max-lg:duration-200
+                max-lg:group-data-open:visible max-lg:group-data-open:translate-x-0
+                lg:flex-1 lg:items-center">
+      <button type="button" data-nav-close aria-label="メニューを閉じる"
+              class="mb-2 self-end rounded p-2 hover:bg-stone-100 lg:hidden">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+      <a th:replace="~{layout :: navLink('/shifts', 'シフト')}"></a>
+      <a th:replace="~{layout :: navLink('/requests', '申請')}"></a>
+      <th:block sec:authorize="hasRole('ADMIN')">
+        <a th:replace="~{layout :: navLink('/admin/shifts', '転記')}"></a>
+        <a th:replace="~{layout :: navLink('/admin/requests', '申請一覧')}"></a>
+        <a th:replace="~{layout :: navLink('/admin/staff', 'スタッフ')}"></a>
+        <a th:replace="~{layout :: navLink('/admin/positions', 'ポジション')}"></a>
+        <a th:replace="~{layout :: navLink('/admin/settings', '設定')}"></a>
+      </th:block>
+      <div class="flex gap-1 max-lg:mt-2 max-lg:flex-col max-lg:border-t max-lg:border-stone-200 max-lg:pt-3
+                  lg:ml-auto lg:items-center">
+        <span class="px-3 py-2 text-stone-500" sec:authentication="principal.name">名前</span>
+        <a th:replace="~{layout :: navLink('/mypage', 'マイページ')}"></a>
+        <form th:action="@{/logout}" method="post">
+          <button class="w-full whitespace-nowrap rounded px-3 py-2 text-left hover:bg-stone-100">ログアウト</button>
+        </form>
+      </div>
+    </nav>
+  </div>
+  <script th:src="@{/js/nav.js}" defer></script>
 </header>
+<!-- ヘッダーのリンク。今いるページ（配下のページを含む）なら背景色を付ける -->
+<a th:fragment="navLink(path, label)" th:href="@{${path}}"
+   th:with="active=${currentPath == path or #strings.startsWith(currentPath, path + '/')}"
+   th:attr="aria-current=${active} ? 'page' : null"
+   class="whitespace-nowrap rounded px-3 py-2"
+   th:classappend="${active} ? 'bg-amber-100 font-bold text-amber-900' : 'hover:bg-stone-100'"
+   th:text="${label}">リンク</a>
 <div th:fragment="flash">
   <p th:if="${message}" th:text="${message}" class="mb-4 rounded bg-green-50 p-3 text-sm text-green-800"></p>
   <p th:if="${error}" th:text="${error}" class="mb-4 rounded bg-red-50 p-3 text-sm text-red-700"></p>
