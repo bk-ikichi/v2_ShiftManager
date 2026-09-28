@@ -35,3 +35,6 @@ build/
 # Tailwindのビルド成果物
 src/main/resources/static/css/app.css
 node_modules/
+
+# 開発引き継ぎメモ（ローカル専用）
+history/
