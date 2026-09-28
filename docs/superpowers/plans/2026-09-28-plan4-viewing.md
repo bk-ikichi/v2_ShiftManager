@@ -564,7 +564,7 @@ public class DailyShiftController {
 Run: `./mvnw test -Dtest=TimeSlotsTest,DailyShiftTest`
 Expected: PASS
 
-- [ ] **Step 10: ブラウザで動作を確認する**
+- [x] **Step 10: ブラウザで動作を確認する**
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - ヘッダーの「シフト」から今日の一覧が開き、前後の日へ移動できる
@@ -1025,7 +1025,7 @@ public class HomeController {
 Run: `./mvnw test -Dtest=HomeChangeTest,UserStateCheckFilterTest,LoginTest`
 Expected: PASS（`UserStateCheckFilterTest`・`LoginTest` は `/` を開くため、`@AuthenticationPrincipal LoginUser` が取れることの確認を兼ねる）
 
-- [ ] **Step 10: ブラウザで動作を確認する**
+- [x] **Step 10: ブラウザで動作を確認する**
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - 管理者で公開済みの日のスタッフの時刻を変更・取り消しして登録し、そのスタッフでログインするとトップに「変更あり」が出る。取り消しは「この日のシフトは取り消されました」
@@ -1885,7 +1885,7 @@ public class HomeService {
 Run: `./mvnw test -Dtest=HomeTest,HomeChangeTest`
 Expected: PASS
 
-- [ ] **Step 9: ブラウザで動作を確認する**
+- [x] **Step 9: ブラウザで動作を確認する**
 
 `npm run build` の後、`./mvnw spring-boot:run` で起動し、スタッフでログインして次を確認する（確認できない場合はユーザーに報告して確認を依頼する）：
 - 上から「変更あり」（ある場合）・次回の出勤・カレンダー・申請の締切・勤務予定時間の順に並ぶ
