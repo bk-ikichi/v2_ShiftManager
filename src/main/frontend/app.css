@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @source "../resources/templates";
+/* バーの色のクラスはJavaのenumに書いているため、スキャン対象に入れる */
+@source "../java/jp/bk/shiftmanager/util/BarColor.java";
 
 /* 共通部品 */
 @layer components {

@@ -6,7 +6,7 @@
 <main class="mx-auto max-w-7xl px-4 py-6">
   <h1 class="mb-4 text-lg font-bold">ポジション管理</h1>
   <div th:replace="~{layout :: flash}"></div>
-  <p class="mb-4 text-sm text-stone-600">表示順の小さいものから、転記画面・日別一覧の上に並びます。使用中のポジションは削除できないため、不要になったら非表示にしてください。</p>
+  <p class="mb-4 text-sm text-stone-600">表示順の小さいものから、転記画面・日別一覧の上に並びます。使用中のポジションは削除できないため、不要になったら非表示にしてください。色は転記画面・日別一覧のバーに使います（管理者は色に関係なく緑で表示します）。</p>
 
   <div class="card mb-6 space-y-3">
     <div th:each="p : ${positions}" class="flex flex-wrap items-end gap-2 border-b border-stone-100 pb-3">
@@ -18,6 +18,18 @@
         <label class="block">
           <span class="text-xs">表示順</span>
           <input type="number" name="displayOrder" th:value="${p.displayOrder}" min="0" max="999" required class="input w-20">
+        </label>
+        <label class="block">
+          <span class="text-xs">色</span>
+          <span class="flex items-center gap-1">
+            <!-- 色見本（選択肢にない色はグレーとして扱うため何も出さない） -->
+            <span th:each="c : ${colors}" th:if="${c.key == p.color}"
+                  class="inline-block h-5 w-5 rounded" th:classappend="${c.barClass}"></span>
+            <select name="color" class="input mt-0 w-auto px-1" aria-label="色">
+              <option th:each="c : ${colors}" th:value="${c.key}" th:text="${c.label}"
+                      th:selected="${c.key == p.color}">水色</option>
+            </select>
+          </span>
         </label>
         <label class="flex items-center gap-1 pb-2 text-sm">
           <input type="checkbox" name="hidden" value="true" th:checked="${p.hidden}">
@@ -42,6 +54,13 @@
     <label class="block">
       <span class="text-xs">表示順</span>
       <input type="number" name="displayOrder" min="0" max="999" value="0" required class="input w-20">
+    </label>
+    <label class="block">
+      <span class="text-xs">色</span>
+      <select name="color" class="input w-auto px-1">
+        <option th:each="c : ${colors}" th:value="${c.key}" th:text="${c.label}"
+                th:selected="${c.key == 'gray'}">グレー</option>
+      </select>
     </label>
     <button class="btn-primary">追加する</button>
   </form>

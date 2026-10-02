@@ -5,6 +5,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY src/main/frontend src/main/frontend
 COPY src/main/resources/templates src/main/resources/templates
+COPY src/main/java/jp/bk/shiftmanager/util/BarColor.java src/main/java/jp/bk/shiftmanager/util/BarColor.java
 RUN npm run build
 
 # アプリのビルド

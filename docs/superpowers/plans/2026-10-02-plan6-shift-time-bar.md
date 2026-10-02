@@ -97,7 +97,7 @@ src/test/java/jp/bk/shiftmanager/
   - `PositionService.colors()`：`List<BarColor>`（画面の選択肢。enumの定義順）
   - モデル属性 `colors`（`/admin/positions`）
 
-- [ ] **Step 1: BarColorの失敗するテストを書く**
+- [x] **Step 1: BarColorの失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/util/BarColorTest.java`
 
@@ -141,12 +141,12 @@ class BarColorTest {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw -q test -Dtest=BarColorTest`
 Expected: コンパイルエラー（`BarColor` がない）
 
-- [ ] **Step 3: BarColorを実装する**
+- [x] **Step 3: BarColorを実装する**
 
 `src/main/java/jp/bk/shiftmanager/util/BarColor.java`
 
@@ -206,12 +206,12 @@ public enum BarColor {
 }
 ```
 
-- [ ] **Step 4: テストが通ることを確認する**
+- [x] **Step 4: テストが通ることを確認する**
 
 Run: `./mvnw -q test -Dtest=BarColorTest`
 Expected: PASS
 
-- [ ] **Step 5: DBとポジション管理の失敗するテストを書く**
+- [x] **Step 5: DBとポジション管理の失敗するテストを書く**
 
 `SchemaTest` に追加：
 
@@ -284,12 +284,12 @@ Expected: PASS
 
 `PositionAdminTest` の import に `import static org.assertj.core.api.Assertions.tuple;` を追加する。
 
-- [ ] **Step 6: テストが失敗することを確認する**
+- [x] **Step 6: テストが失敗することを確認する**
 
 Run: `./mvnw -q test -Dtest=SchemaTest,PositionAdminTest`
 Expected: コンパイルエラー（`Position.getColor` がない）
 
-- [ ] **Step 7: マイグレーション・エンティティ・Mapperを変更する**
+- [x] **Step 7: マイグレーション・エンティティ・Mapperを変更する**
 
 `src/main/resources/db/migration/V3__positions_color.sql`
 
@@ -320,7 +320,7 @@ import に `import jp.bk.shiftmanager.util.BarColor;` を追加する。
     int update(Position position);
 ```
 
-- [ ] **Step 8: フォーム・Service・Controllerを変更する**
+- [x] **Step 8: フォーム・Service・Controllerを変更する**
 
 `PositionForm.java` に追加（`hidden` の下）。送られなかった場合（古い画面から送信した場合）はグレーにする：
 
@@ -381,7 +381,7 @@ import に `import jp.bk.shiftmanager.util.BarColor;` を追加する。
     }
 ```
 
-- [ ] **Step 9: 画面を変更する**
+- [x] **Step 9: 画面を変更する**
 
 `templates/admin/positions.html` の一覧の行（各ポジションの更新フォーム）で、「表示順」のlabelの後に追加：
 
@@ -414,7 +414,7 @@ import に `import jp.bk.shiftmanager.util.BarColor;` を追加する。
 
 説明文（`<p class="mb-4 text-sm text-stone-600">`）の末尾に「色は転記画面・日別一覧のバーに使います（管理者は色に関係なく緑で表示します）。」を追加する。
 
-- [ ] **Step 10: TailwindのスキャンとDockerfileを変更する**
+- [x] **Step 10: TailwindのスキャンとDockerfileを変更する**
 
 `src/main/frontend/app.css` の `@source` の下に追加：
 
@@ -432,12 +432,12 @@ COPY src/main/java/jp/bk/shiftmanager/util/BarColor.java src/main/java/jp/bk/shi
 Run: `npm run build` の後、`grep -c "bg-sky-300" src/main/resources/static/css/app.css`
 Expected: 1以上（`app.css` はgit管理外のためコミットしない）
 
-- [ ] **Step 11: テストが通ることを確認する**
+- [x] **Step 11: テストが通ることを確認する**
 
 Run: `./mvnw -q test -Dtest=BarColorTest,SchemaTest,PositionAdminTest`
 Expected: PASS
 
-- [ ] **Step 12: ドキュメントを更新する**
+- [x] **Step 12: ドキュメントを更新する**
 
 `documents/2026-09-25-shift-manager-v2-spec.md` の「ポジション管理（管理者）」に追記：
 
@@ -451,12 +451,12 @@ Expected: PASS
 | color | VARCHAR(20) | NOT NULL DEFAULT 'gray' | バーの色（`util/BarColor` のキー：sky・pink・red・orange・yellow・purple・blue・gray） |
 ```
 
-- [ ] **Step 13: 全テストを実行する**
+- [x] **Step 13: 全テストを実行する**
 
 Run: `./mvnw -q test`
 Expected: PASS（既存のテストは `color` を送らないため、グレーとして保存される）
 
-- [ ] **Step 14: コミットし、この計画のTask 1のチェックボックスを更新する**
+- [x] **Step 14: コミットし、この計画のTask 1のチェックボックスを更新する**
 
 ```bash
 git add -A src/main/java src/main/resources/db src/main/resources/templates src/main/frontend Dockerfile src/test documents docs/superpowers/plans/2026-10-02-plan6-shift-time-bar.md

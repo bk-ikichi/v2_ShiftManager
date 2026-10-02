@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jp.bk.shiftmanager.util.BarColor;
 import lombok.Data;
 
 @Data
@@ -20,6 +21,9 @@ public class PositionForm {
     private Integer displayOrder;
 
     private boolean hidden;
+
+    /** BarColor のキー。選択肢にない値は PositionService で入力エラーにする */
+    private String color = BarColor.DEFAULT_KEY;
 
     public void setName(String name) {
         this.name = name == null ? null : name.strip();

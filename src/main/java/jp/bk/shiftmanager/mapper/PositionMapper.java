@@ -22,11 +22,13 @@ public interface PositionMapper {
     @Select("SELECT * FROM positions WHERE id = #{id}")
     Position findById(@Param("id") long id);
 
-    @Insert("INSERT INTO positions (name, display_order, hidden) VALUES (#{name}, #{displayOrder}, #{hidden})")
+    @Insert("INSERT INTO positions (name, display_order, hidden, color) "
+            + "VALUES (#{name}, #{displayOrder}, #{hidden}, #{color})")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     void insert(Position position);
 
-    @Update("UPDATE positions SET name = #{name}, display_order = #{displayOrder}, hidden = #{hidden} WHERE id = #{id}")
+    @Update("UPDATE positions SET name = #{name}, display_order = #{displayOrder}, hidden = #{hidden}, "
+            + "color = #{color} WHERE id = #{id}")
     int update(Position position);
 
     @Delete("DELETE FROM positions WHERE id = #{id}")
