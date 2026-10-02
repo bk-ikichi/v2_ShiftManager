@@ -42,6 +42,10 @@ public class UserRepository {
         userMapper.updateProfile(user);
     }
 
+    public void updateDisplayOrder(long id, int displayOrder) {
+        userMapper.updateDisplayOrder(id, displayOrder);
+    }
+
     public void updateEnabled(long id, boolean enabled) {
         userMapper.updateEnabled(id, enabled);
     }
