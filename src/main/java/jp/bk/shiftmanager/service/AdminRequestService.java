@@ -87,6 +87,7 @@ public class AdminRequestService {
         view.setDeadlineLabel(DateLabels.monthDayWeek(cycle.deadline(appSettingRepository.getDeadlineDaysBefore())));
         view.setPreviousStart(cycle.previous().start());
         view.setNextStart(cycle.next().start());
+        view.setDates(dates);
         view.setDateLabels(dates.stream().map(DateLabels::dayWeek).toList());
         view.setRows(rows);
         return view;
@@ -155,7 +156,7 @@ public class AdminRequestService {
         if (request == null) {
             return new RequestCell(date, null, null, null);
         }
-        return new RequestCell(date, TimeSlots.format(request.getStartTime()),
-                TimeSlots.format(request.getEndTime()), request.getNote());
+        return new RequestCell(date, TimeSlots.formatCompact(request.getStartTime()),
+                TimeSlots.formatCompact(request.getEndTime()), request.getNote());
     }
 }

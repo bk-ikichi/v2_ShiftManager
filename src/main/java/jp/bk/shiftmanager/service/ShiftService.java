@@ -203,7 +203,9 @@ public class ShiftService {
     private ShiftDayView buildView(LocalDate date, List<Shift> shifts, Map<Long, List<ShiftRowForm>> rowsByPosition,
             boolean addBlankRows) {
         List<Position> positions = positionRepository.findAll();
-        List<User> candidates = candidates(positions, shifts);
+        List<User> users = userRepository.findAll();
+        Map<Long, User> usersById = users.stream().collect(Collectors.toMap(User::getId, Function.identity()));
+        List<User> candidates = candidates(positions, users, shifts);
         Map<String, ShiftRequest> requests = shiftRequestRepository.findByPeriod(date, date).stream()
                 .collect(Collectors.toMap(request -> request.getUserId().toString(), request -> request));
 
@@ -246,7 +248,13 @@ public class ShiftService {
         view.setNextLabel(DateLabels.monthDayWeek(date.plusDays(1)));
         view.setPublished(publishedDateRepository.isPublished(date));
         view.setGroups(groups);
-        view.setRequests(requests.values().stream().map(this::toRequestInfo).toList());
+        // 「希望シフトを反映する」で上から順に入るよう、INの早い順 → 名前の順にする
+        view.setRequests(requests.values().stream()
+                .filter(request -> usersById.containsKey(request.getUserId()))
+                .sorted(Comparator.comparing(ShiftRequest::getStartTime)
+                        .thenComparing(request -> usersById.get(request.getUserId()).getName()))
+                .map(request -> toRequestInfo(request, usersById.get(request.getUserId())))
+                .toList());
         view.setNextIndex(index);
         Cycle cycle = Cycle.of(date);
         view.setRangeStart(cycle.start());
@@ -261,14 +269,14 @@ public class ShiftService {
      * 名前の候補：有効なスタッフと、その日に登録済みのスタッフ（無効化されていても残す）。
      * 初期ポジションの表示順（未設定は最後）→ 名前の順
      */
-    private List<User> candidates(List<Position> positions, List<Shift> shifts) {
+    private List<User> candidates(List<Position> positions, List<User> users, List<Shift> shifts) {
         Map<Long, Integer> order = new HashMap<>();
         for (int i = 0; i < positions.size(); i++) {
             order.put(positions.get(i).getId(), i);
         }
         Set<Long> assigned = shifts.stream().map(Shift::getUserId).collect(Collectors.toSet());
         // findAll は名前の順のため、安定ソートでポジションの表示順に並べ替える
-        return userRepository.findAll().stream()
+        return users.stream()
                 .filter(user -> user.isEnabled() || assigned.contains(user.getId()))
                 .sorted(Comparator.comparingInt(
                         (User user) -> order.getOrDefault(user.getPositionId(), Integer.MAX_VALUE)))
@@ -318,9 +326,10 @@ public class ShiftService {
         return new ShiftCandidate(user.getId().toString(), user.getName());
     }
 
-    private ShiftRequestInfo toRequestInfo(ShiftRequest request) {
-        return new ShiftRequestInfo(request.getUserId().toString(), TimeSlots.format(request.getStartTime()),
-                TimeSlots.format(request.getEndTime()), request.getNote());
+    private ShiftRequestInfo toRequestInfo(ShiftRequest request, User user) {
+        return new ShiftRequestInfo(request.getUserId().toString(), user.getName(),
+                user.getPositionId() == null ? null : user.getPositionId().toString(),
+                TimeSlots.format(request.getStartTime()), TimeSlots.format(request.getEndTime()), request.getNote());
     }
 
     /** 数値でなければnull */

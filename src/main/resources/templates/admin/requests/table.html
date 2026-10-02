@@ -10,6 +10,8 @@
     <span class="font-bold" th:text="${view.label}">10/1〜10/10</span>
     <a th:href="@{/admin/requests(date=${view.nextStart})}" class="btn-secondary px-3 py-1">次 &gt;</a>
     <span class="text-sm text-stone-600" th:text="|締切 ${view.deadlineLabel}|">締切 9/26（土）</span>
+    <button type="button" data-copy-excel class="btn-secondary px-3 py-1 text-sm">Excel用にコピー</button>
+    <span data-copy-message class="text-sm text-green-800" role="status"></span>
     <span class="ml-auto flex items-center gap-1 text-sm">
       <span class="inline-block h-3 w-3 rounded border border-red-200 bg-red-100"></span>未提出
     </span>
@@ -21,7 +23,11 @@
       <thead>
       <tr class="bg-stone-100">
         <th class="sticky left-0 z-10 bg-stone-100 px-3 py-2 text-left">名前</th>
-        <th th:each="label : ${view.dateLabels}" class="whitespace-nowrap px-2 py-2" th:text="${label}">1（木）</th>
+        <!-- 日付から、その日の転記画面へ移動する -->
+        <th th:each="date, s : ${view.dates}" class="whitespace-nowrap p-0">
+          <a th:href="@{/admin/shifts(date=${date})}" th:text="${view.dateLabels[s.index]}"
+             class="block px-2 py-2 text-amber-800 underline hover:bg-amber-50">1（木）</a>
+        </th>
       </tr>
       </thead>
       <tbody>
@@ -33,21 +39,40 @@
           <span class="block text-xs text-stone-500" th:text="${row.positionName}">キッチン</span>
           <span th:if="${row.unavailable}" class="block text-xs text-red-700">この期間は出勤できない</span>
         </th>
-        <td th:each="cell : ${row.cells}" class="whitespace-nowrap p-0 text-center">
+        <!-- data-start / data-end は「Excel用にコピー」で使う -->
+        <td th:each="cell : ${row.cells}" class="relative min-w-20 p-0 text-center"
+            th:data-start="${cell.startTime}" th:data-end="${cell.endTime}" data-cell>
           <a th:href="@{/admin/requests/edit(userId=${row.userId},date=${cell.date})}"
-             class="block min-h-10 min-w-14 px-2 py-1 hover:bg-amber-50">
+             class="block min-h-10 whitespace-nowrap py-2 pl-1 pr-4 text-xs tabular-nums hover:bg-amber-50">
             <th:block th:if="${cell.startTime != null}">
-              <span th:text="${cell.startTime}">09:00</span><span class="select-none px-1 text-stone-400" aria-hidden="true">|</span><span th:text="${cell.endTime}">17:00</span>
+              <span th:text="${cell.startTime}">900</span><span class="px-0.5 text-stone-400">-</span><span th:text="${cell.endTime}">1700</span>
             </th:block>
-            <span th:if="${cell.note != null}" th:title="${cell.note}" class="text-amber-700">※</span>
           </a>
+          <th:block th:if="${cell.note != null}" th:with="noteId=|note-${row.userId}-${cell.date}|">
+            <button type="button" th:popovertarget="${noteId}" aria-label="備考を表示" data-note-button
+                    class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-amber-700 font-serif text-[10px] font-bold italic text-amber-700 hover:bg-amber-100">i</button>
+            <!-- 吹き出し。位置と矢印の向きは request-table.js で i マークに合わせる -->
+            <div popover th:id="${noteId}" data-note-popover
+                 class="m-0 w-64 max-w-[85vw] overflow-visible rounded-lg border border-stone-300 bg-white p-3 text-left text-sm shadow-xl">
+              <span data-arrow class="absolute h-3 w-3 rotate-45 border-stone-300 bg-white"></span>
+              <p class="mb-2 font-bold">
+                <span th:text="${row.name}">山田太郎</span>
+                <span class="ml-2 font-normal text-stone-600" th:text="${#temporals.format(cell.date, 'M/d')}">10/2</span>
+              </p>
+              <p class="whitespace-pre-wrap break-words" th:text="${cell.note}">遅れるかも</p>
+            </div>
+          </th:block>
         </td>
       </tr>
       </tbody>
     </table>
   </div>
   <p th:if="${#lists.isEmpty(view.rows)}" class="mt-4 text-sm text-stone-500">有効なスタッフがいません。</p>
-  <p class="mt-2 text-xs text-stone-500">マスをクリックすると代理で編集できます（締切後も可）。※ にカーソルを合わせると備考を表示します。</p>
+  <p class="mt-2 text-xs text-stone-500">
+    日付をクリックするとその日の転記画面、マスをクリックすると代理で編集できます（締切後も可）。i を押すと備考を表示します。<br>
+    「Excel用にコピー」は時刻だけ（1日につきIN・OUTの2列、表示中の並び順）をコピーします。休みの日は空欄になります。
+  </p>
 </main>
+<script th:src="@{/js/request-table.js}" defer></script>
 </body>
 </html>

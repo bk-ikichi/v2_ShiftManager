@@ -45,8 +45,15 @@ class AdminRequestTest extends IntegrationTestBase {
         MvcResult result = mvc.perform(get("/admin/requests").param("date", "2026-10-01").with(user(admin)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(Matchers.containsString("山田太郎")))
-                .andExpect(content().string(Matchers.containsString("09:00")))
+                .andExpect(content().string(Matchers.containsString("900")))
                 .andExpect(content().string(Matchers.containsString("遅れるかも")))
+                // 備考は i を押して表示する
+                .andExpect(content().string(Matchers.containsString(
+                        "popovertarget=\"note-" + taro.getId() + "-2026-10-02\"")))
+                // 日付から転記画面へ移動できる
+                .andExpect(content().string(Matchers.containsString("href=\"/admin/shifts?date=2026-10-02\"")))
+                // 「Excel用にコピー」用の時刻
+                .andExpect(content().string(Matchers.containsString("data-start=\"900\" data-end=\"1700\"")))
                 .andReturn();
 
         RequestTableView view = view(result);
@@ -55,8 +62,10 @@ class AdminRequestTest extends IntegrationTestBase {
         RequestTableRow row = row(view, "山田太郎");
         assertThat(row.getPositionName()).isEqualTo("キッチン");
         assertThat(row.getCells()).hasSize(10);
-        assertThat(row.getCells().get(1).getStartTime()).isEqualTo("09:00");
-        assertThat(row.getCells().get(1).getEndTime()).isEqualTo("17:00");
+        assertThat(view.getDates()).hasSize(10).startsWith(OCT1);
+        // Excelに数値として貼り付けられるよう、コロンと先頭のゼロを付けない
+        assertThat(row.getCells().get(1).getStartTime()).isEqualTo("900");
+        assertThat(row.getCells().get(1).getEndTime()).isEqualTo("1700");
         assertThat(row.getCells().get(0).getStartTime()).isNull();
     }
 

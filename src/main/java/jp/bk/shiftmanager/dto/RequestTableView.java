@@ -15,6 +15,8 @@ public class RequestTableView {
     private String deadlineLabel;
     private LocalDate previousStart;
     private LocalDate nextStart;
+    /** 列の日付（見出しから転記画面へ移動するのに使う） */
+    private List<LocalDate> dates;
     /** 列見出し（例：1（木）） */
     private List<String> dateLabels;
     private List<RequestTableRow> rows;

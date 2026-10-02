@@ -37,6 +37,14 @@ class TimeSlotsTest {
     }
 
     @Test
+    void 時刻をコロンなし先頭ゼロなしの文字列にする() {
+        assertThat(TimeSlots.formatCompact(LocalTime.of(8, 0))).isEqualTo("800");
+        assertThat(TimeSlots.formatCompact(LocalTime.of(12, 30))).isEqualTo("1230");
+        assertThat(TimeSlots.formatCompact(LocalTime.of(23, 0))).isEqualTo("2300");
+        assertThat(TimeSlots.formatCompact(null)).isNull();
+    }
+
+    @Test
     void 時間帯を表示用の文字列にする() {
         assertThat(TimeSlots.formatRange(LocalTime.of(9, 0), LocalTime.of(17, 30))).isEqualTo("09:00〜17:30");
     }
