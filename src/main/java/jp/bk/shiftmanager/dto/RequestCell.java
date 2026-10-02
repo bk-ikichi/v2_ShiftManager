@@ -9,6 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class RequestCell {
     private LocalDate date;
+    /** 例：800、1230（Excelに数値として貼り付けられる形式） */
     private String startTime;
     private String endTime;
     private String note;

@@ -1,14 +1,22 @@
-// 転記画面：行の追加・クリア、名前を選んだときの申請表示と警告、同じスタッフの二重選択の防止、未保存の確認
+// 転記画面：行の追加・クリア、名前を選んだときの申請表示と警告、同じスタッフの二重選択の防止、未保存の確認、
+// 希望シフトの反映
 (() => {
   const form = document.getElementById('shift-form');
   if (!form) {
     return;
   }
 
-  // その日の申請（userId → {start, end, note}）
+  // その日の申請（userId → {userId, name, positionId, start, end, note}）。並びはINの早い順
   const requests = new Map();
   document.querySelectorAll('#request-data li').forEach((li) => {
-    requests.set(li.dataset.userId, { start: li.dataset.start, end: li.dataset.end, note: li.dataset.note || '' });
+    requests.set(li.dataset.userId, {
+      userId: li.dataset.userId,
+      name: li.dataset.name,
+      positionId: li.dataset.positionId || '',
+      start: li.dataset.start,
+      end: li.dataset.end,
+      note: li.dataset.note || '',
+    });
   });
 
   let dirty = false;
@@ -84,21 +92,82 @@
   form.querySelectorAll('[data-row]').forEach(setUpRow);
   refreshDuplicates();
 
-  // 「+ 追加する」：雛形の ROW_INDEX を未使用の添字に置き換えて行を追加する
+  // 雛形の ROW_INDEX を未使用の添字に置き換えて行を追加する
   let nextIndex = Number(form.dataset.nextIndex);
+  const addRow = (group) => {
+    const html = group.querySelector('template[data-row-template]').innerHTML
+      .replaceAll('ROW_INDEX', String(nextIndex));
+    nextIndex += 1;
+    const tbody = group.querySelector('[data-rows]');
+    tbody.insertAdjacentHTML('beforeend', html);
+    const row = tbody.lastElementChild;
+    setUpRow(row);
+    refreshRow(row);
+    return row;
+  };
   form.querySelectorAll('[data-group]').forEach((group) => {
     group.querySelector('[data-add-row]').addEventListener('click', () => {
-      const html = group.querySelector('template[data-row-template]').innerHTML
-        .replaceAll('ROW_INDEX', String(nextIndex));
-      nextIndex += 1;
-      const tbody = group.querySelector('[data-rows]');
-      tbody.insertAdjacentHTML('beforeend', html);
-      const row = tbody.lastElementChild;
-      setUpRow(row);
-      refreshRow(row);
+      addRow(group);
       refreshDuplicates();
     });
   });
+
+  // 「希望シフトを反映する」：まだどの行にも選ばれていないスタッフの申請を、初期ポジションの空欄行（なければ追加）に入れる
+  const isBlankRow = (row) => [...row.querySelectorAll('select')].every((select) => select.value === '');
+  const reflectButton = document.querySelector('[data-reflect-requests]');
+  const reflectMessage = document.querySelector('[data-reflect-message]');
+  const showReflectMessage = (text, isError) => {
+    reflectMessage.textContent = text;
+    reflectMessage.classList.toggle('text-red-700', isError);
+    reflectMessage.classList.toggle('text-green-800', !isError);
+    reflectMessage.hidden = false;
+  };
+  if (reflectButton) {
+    reflectButton.addEventListener('click', () => {
+      if (requests.size === 0) {
+        showReflectMessage('この日の申請はありません', true);
+        return;
+      }
+      const chosen = new Set([...form.querySelectorAll('select[data-user]')].map((select) => select.value));
+      const skipped = [];
+      let reflected = 0;
+      requests.forEach((request) => {
+        if (chosen.has(request.userId)) {
+          return;
+        }
+        const group = request.positionId
+          ? form.querySelector(`[data-group][data-position-id="${request.positionId}"]`)
+          : null;
+        if (!group) {
+          skipped.push(`${request.name}（${request.positionId ? '初期ポジションが非表示' : '初期ポジションが未設定'}）`);
+          return;
+        }
+        // 無効化されたスタッフなど、名前の候補にいない場合
+        const template = group.querySelector('template[data-row-template]').content;
+        if (!template.querySelector(`select[data-user] option[value="${request.userId}"]`)) {
+          skipped.push(`${request.name}（選択できないスタッフ）`);
+          return;
+        }
+        const row = [...group.querySelectorAll('[data-row]')].find(isBlankRow) || addRow(group);
+        row.querySelector('select[data-user]').value = request.userId;
+        row.querySelector('select[data-in]').value = request.start;
+        row.querySelector('select[data-out]').value = request.end;
+        refreshRow(row);
+        reflected += 1;
+      });
+      refreshDuplicates();
+      if (reflected > 0) {
+        dirty = true;
+      }
+      const result = reflected > 0 ? `${reflected}人の希望シフトを反映しました。「登録する」で保存してください`
+        : '反映する申請はありません（申請したスタッフは入力済みです）';
+      if (skipped.length > 0) {
+        showReflectMessage(`${result}。反映できなかったスタッフ：${skipped.join('、')}`, true);
+      } else {
+        showReflectMessage(result, false);
+      }
+    });
+  }
 
   // 未保存の入力がある状態で別の日へ移動するときは確認する
   document.querySelectorAll('a[data-leave-link]').forEach((link) => {

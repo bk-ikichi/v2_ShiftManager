@@ -12,6 +12,7 @@ import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.dto.ShiftCandidate;
 import jp.bk.shiftmanager.dto.ShiftDayView;
 import jp.bk.shiftmanager.dto.ShiftGroupView;
+import jp.bk.shiftmanager.dto.ShiftRequestInfo;
 import jp.bk.shiftmanager.dto.ShiftRowView;
 import jp.bk.shiftmanager.entity.Position;
 import jp.bk.shiftmanager.entity.User;
@@ -169,6 +170,27 @@ class ShiftDayTest extends IntegrationTestBase {
                 .andExpect(content().string(Matchers.containsString("data-note=\"メモ\"")))
                 .andExpect(content().string(Matchers.containsString("+ 追加する")))
                 .andExpect(content().string(Matchers.containsString("下書き")));
+    }
+
+    @Test
+    void 希望シフトの反映用に申請をINの早い順で名前と初期ポジション付きで埋め込む() throws Exception {
+        data.request(taro, OCT2, "10:00", "17:00", null);
+        data.request(hanako, OCT2, "09:00", "13:00", null);
+        // 初期ポジション未設定
+        data.request(jiro, OCT2, "09:00", "12:00", null);
+
+        ShiftDayView view = view("2026-10-02");
+
+        assertThat(view.getRequests()).extracting(ShiftRequestInfo::getName)
+                .containsExactly("佐藤花子", "鈴木次郎", "山田太郎");
+        assertThat(view.getRequests()).extracting(ShiftRequestInfo::getPositionId)
+                .containsExactly(counter.getId().toString(), null, kitchen.getId().toString());
+        mvc.perform(get("/admin/shifts").param("date", "2026-10-02").with(user(admin)))
+                .andExpect(content().string(Matchers.containsString("希望シフトを反映する")))
+                .andExpect(content().string(Matchers.matchesRegex(
+                        "(?s).*data-name=\"山田太郎\"\\s+data-position-id=\"" + kitchen.getId() + "\".*")))
+                .andExpect(content().string(Matchers.containsString(
+                        "data-group data-position-id=\"" + kitchen.getId() + "\"")));
     }
 
     @Test

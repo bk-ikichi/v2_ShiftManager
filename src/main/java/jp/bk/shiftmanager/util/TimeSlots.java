@@ -14,6 +14,8 @@ public final class TimeSlots {
     public static final LocalTime LAST = LocalTime.of(23, 0);
 
     private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    /** Excelで数値として扱えるよう、コロンと先頭のゼロを付けない */
+    private static final DateTimeFormatter COMPACT_FORMAT = DateTimeFormatter.ofPattern("Hmm");
 
     /** 選択肢の時刻（31個） */
     public static final List<LocalTime> ALL =
@@ -44,6 +46,11 @@ public final class TimeSlots {
     /** 例：08:00。nullならnull */
     public static String format(LocalTime time) {
         return time == null ? null : time.format(FORMAT);
+    }
+
+    /** 例：800、1230。nullならnull */
+    public static String formatCompact(LocalTime time) {
+        return time == null ? null : time.format(COMPACT_FORMAT);
     }
 
     /** 例：09:00〜17:00 */
