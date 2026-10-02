@@ -23,6 +23,8 @@ public class DailyShiftView {
     private String message;
     /** ポジションの表示順。出勤者のいないポジションは含めない */
     private List<DailyShiftGroup> groups = new ArrayList<>();
+    /** 凡例。その日に出てくるポジション（表示順）と、管理者がいれば社員 */
+    private List<LegendItem> legend = new ArrayList<>();
     /** 管理者なら転記画面へのリンクを出す */
     private boolean admin;
 }

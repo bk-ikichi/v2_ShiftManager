@@ -492,7 +492,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `DailyShiftView.getLegend()`：`List<LegendItem>`
   - CSSクラス `.time-grid`（1時間おきの薄い縦線。Task 3でも使う）
 
-- [ ] **Step 1: TimeBarの失敗するテストを書く**
+- [x] **Step 1: TimeBarの失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/util/TimeBarTest.java`
 
@@ -539,7 +539,7 @@ class TimeBarTest {
         TimeBar left = bar("17:30", "19:30");
         assertThat(left.label()).isEqualTo(TimeBar.Label.LEFT);
         // バーの左端の位置で書き終える（右からの距離で指定する）
-        assertThat(left.labelStyle()).isEqualTo("right:63.3333%");
+        assertThat(left.labelStyle()).isEqualTo("right:36.6667%");
     }
 
     @Test
@@ -552,12 +552,12 @@ class TimeBarTest {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw -q test -Dtest=TimeBarTest`
 Expected: コンパイルエラー（`TimeBar` がない）
 
-- [ ] **Step 3: TimeBarを実装する**
+- [x] **Step 3: TimeBarを実装する**
 
 `src/main/java/jp/bk/shiftmanager/util/TimeBar.java`
 
@@ -614,12 +614,12 @@ public record TimeBar(String style, Label label, String labelStyle) {
 }
 ```
 
-- [ ] **Step 4: テストが通ることを確認する**
+- [x] **Step 4: テストが通ることを確認する**
 
 Run: `./mvnw -q test -Dtest=TimeBarTest`
 Expected: PASS
 
-- [ ] **Step 5: 日別一覧の失敗するテストを書く**
+- [x] **Step 5: 日別一覧の失敗するテストを書く**
 
 `DailyShiftTest` に追加：
 
@@ -674,12 +674,12 @@ Expected: PASS
 
 `DailyShiftTest` に `@Autowired PositionMapper positionMapper;` のフィールドと、import（`jp.bk.shiftmanager.dto.LegendItem`、`jp.bk.shiftmanager.mapper.PositionMapper`、`org.springframework.beans.factory.annotation.Autowired`）を追加する。
 
-- [ ] **Step 6: テストが失敗することを確認する**
+- [x] **Step 6: テストが失敗することを確認する**
 
 Run: `./mvnw -q test -Dtest=DailyShiftTest`
 Expected: コンパイルエラー（`LegendItem`・`getBarClass` がない）
 
-- [ ] **Step 7: DTOを変更する**
+- [x] **Step 7: DTOを変更する**
 
 `src/main/java/jp/bk/shiftmanager/dto/LegendItem.java`
 
@@ -719,7 +719,7 @@ public class LegendItem {
     private List<LegendItem> legend = new ArrayList<>();
 ```
 
-- [ ] **Step 8: DailyShiftServiceを変更する**
+- [x] **Step 8: DailyShiftServiceを変更する**
 
 `getDay` の「公開後に無効化されたスタッフ…」以降を次に置き換える：
 
@@ -772,7 +772,7 @@ public class LegendItem {
 
 import に `java.util.function.Function`、`jp.bk.shiftmanager.dto.LegendItem`、`jp.bk.shiftmanager.util.BarColor`、`jp.bk.shiftmanager.util.TimeBar` を追加する。
 
-- [ ] **Step 9: 時間軸の目盛線のCSSを追加する**
+- [x] **Step 9: 時間軸の目盛線のCSSを追加する**
 
 `src/main/frontend/app.css` の `@layer components` 内に追加：
 
@@ -785,7 +785,7 @@ import に `java.util.function.Function`、`jp.bk.shiftmanager.dto.LegendItem`�
   }
 ```
 
-- [ ] **Step 10: 日別一覧の画面をガントチャートに書き換える**
+- [x] **Step 10: 日別一覧の画面をガントチャートに書き換える**
 
 `templates/shifts/day.html` の `<section th:each="g : ${view.groups}" ...>…</section>` を次に置き換える：
 
@@ -825,12 +825,12 @@ import に `java.util.function.Function`、`jp.bk.shiftmanager.dto.LegendItem`�
   </div>
 ```
 
-- [ ] **Step 11: テストが通ることを確認する**
+- [x] **Step 11: テストが通ることを確認する**
 
 Run: `./mvnw -q test -Dtest=TimeBarTest,DailyShiftTest`
 Expected: PASS
 
-- [ ] **Step 12: ブラウザで確認する**
+- [x] **Step 12: ブラウザで確認する**
 
 `npm run build` の後にアプリを起動し、公開済みの日の `/shifts?date=...` を開く。確認すること：
 - PC幅とスマホ幅（375px）で横スクロールが出ない
@@ -841,7 +841,7 @@ Expected: PASS
 
 確認後、起動したアプリを停止する。
 
-- [ ] **Step 13: 仕様書を更新する**
+- [x] **Step 13: 仕様書を更新する**
 
 `documents/2026-09-25-shift-manager-v2-spec.md` の「日別シフト一覧」に追記：
 
@@ -849,12 +849,12 @@ Expected: PASS
 - ガントチャートで表示する。左に名前、右に8:00〜23:00の時間軸（2時間おきに数字、1時間おきに縦線）を置き、IN〜OUTを横バーで表す。バーの色は、管理者なら緑（社員）、それ以外は入れたポジションの色。時刻はバーの中に書き、5時間未満の勤務はバーの外（OUTが19:00以前なら右、それより後なら左）に書く。上部に凡例（その日のポジションの色と、管理者がいれば社員）を置く（2026-10-02 追加）
 ```
 
-- [ ] **Step 14: 全テストを実行する**
+- [x] **Step 14: 全テストを実行する**
 
 Run: `./mvnw -q test`
 Expected: PASS
 
-- [ ] **Step 15: コミットし、この計画のTask 2のチェックボックスを更新する**
+- [x] **Step 15: コミットし、この計画のTask 2のチェックボックスを更新する**
 
 ```bash
 git add -A src/main/java src/main/resources/templates src/main/frontend src/test documents docs/superpowers/plans/2026-10-02-plan6-shift-time-bar.md
