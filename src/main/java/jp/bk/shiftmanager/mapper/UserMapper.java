@@ -35,13 +35,16 @@ public interface UserMapper {
             """)
     int updatePassword(@Param("id") long id, @Param("hash") String hash, @Param("mustChange") boolean mustChange);
 
-    /** 有効なスタッフが先、ポジションの表示順、名前の順 */
+    /** 有効なスタッフが先、スタッフの並び順（未設定は後ろ）、ポジションの表示順、名前の順 */
     @Select("""
             SELECT u.id, u.login_id, u.name, u.admin, u.enabled, p.name AS position_name
             FROM users u LEFT JOIN positions p ON p.id = u.position_id
-            ORDER BY u.enabled DESC, p.display_order NULLS LAST, u.name
+            ORDER BY u.enabled DESC, u.display_order NULLS LAST, p.display_order NULLS LAST, u.name, u.id
             """)
     List<StaffRow> findStaffRows();
+
+    @Update("UPDATE users SET display_order = #{displayOrder} WHERE id = #{id}")
+    int updateDisplayOrder(@Param("id") long id, @Param("displayOrder") int displayOrder);
 
     @Update("""
             UPDATE users SET login_id = #{loginId}, name = #{name}, position_id = #{positionId},

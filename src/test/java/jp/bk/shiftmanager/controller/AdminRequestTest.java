@@ -1,12 +1,16 @@
 package jp.bk.shiftmanager.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import jp.bk.shiftmanager.IntegrationTestBase;
 import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.dto.RequestTableRow;
@@ -18,6 +22,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 
 /** 管理者の申請一覧（今日は2026-09-25） */
 class AdminRequestTest extends IntegrationTestBase {
@@ -124,6 +129,65 @@ class AdminRequestTest extends IntegrationTestBase {
     void 一般スタッフは申請一覧を表示できない() throws Exception {
         mvc.perform(get("/admin/requests").with(user(data.login(taro))))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void ドラッグで変えた並び順を保存すると申請一覧がその順番になる() throws Exception {
+        User hanako = data.user("hanako", "佐藤花子", false);
+        // 並び順を保存する前は、ポジションの表示順（未設定は後ろ）→名前の順
+        assertThat(names()).containsExactly("山田太郎", "佐藤花子", "店長");
+
+        saveOrder(admin, hanako, boss, taro).andExpect(status().isOk());
+
+        assertThat(names()).containsExactly("佐藤花子", "店長", "山田太郎");
+    }
+
+    @Test
+    void 並び順を保存した後に登録したスタッフは一番下に並ぶ() throws Exception {
+        saveOrder(admin, taro, boss).andExpect(status().isOk());
+
+        data.user("hanako", "佐藤花子", false);
+
+        assertThat(names()).containsExactly("山田太郎", "店長", "佐藤花子");
+    }
+
+    @Test
+    void 存在しないスタッフを含む並び順は保存しない() throws Exception {
+        mvc.perform(post("/admin/requests/order").with(user(admin)).with(csrf())
+                        .param("userIds", taro.getId().toString(), "9999"))
+                .andExpect(status().isBadRequest());
+
+        assertThat(names()).containsExactly("山田太郎", "店長");
+    }
+
+    @Test
+    void 同じスタッフが重複した並び順は保存しない() throws Exception {
+        saveOrder(admin, boss, taro, boss).andExpect(status().isBadRequest());
+
+        assertThat(names()).containsExactly("山田太郎", "店長");
+    }
+
+    @Test
+    void 一般スタッフは並び順を保存できない() throws Exception {
+        saveOrder(data.login(taro), boss, taro).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void 申請一覧に並び順を保存するための行IDとCSRFトークンがある() throws Exception {
+        mvc.perform(get("/admin/requests").with(user(admin)))
+                .andExpect(content().string(Matchers.containsString("data-user-id=\"" + taro.getId() + "\"")))
+                .andExpect(content().string(Matchers.containsString("data-csrf-header=")));
+    }
+
+    private ResultActions saveOrder(LoginUser login, User... users)
+            throws Exception {
+        String[] ids = Arrays.stream(users).map(u -> u.getId().toString()).toArray(String[]::new);
+        return mvc.perform(post("/admin/requests/order").with(user(login)).with(csrf()).param("userIds", ids));
+    }
+
+    private List<String> names() throws Exception {
+        return view(mvc.perform(get("/admin/requests").with(user(admin))).andReturn()).getRows().stream()
+                .map(RequestTableRow::getName).toList();
     }
 
     private static RequestTableView view(MvcResult result) {

@@ -56,6 +56,21 @@ public class AdminRequestService {
         return Cycle.of(LocalDate.now(clock)).next();
     }
 
+    /** スタッフの並び順を、渡された順番（先頭が1）で保存する */
+    @Transactional
+    public void saveOrder(List<Long> userIds) {
+        if (userIds.isEmpty() || new HashSet<>(userIds).size() != userIds.size()) {
+            throw new BusinessException("並び順が正しくありません");
+        }
+        for (int i = 0; i < userIds.size(); i++) {
+            long userId = userIds.get(i);
+            if (userRepository.findById(userId).isEmpty()) {
+                throw new BusinessException(USER_NOT_FOUND);
+            }
+            userRepository.updateDisplayOrder(userId, i + 1);
+        }
+    }
+
     /** サイクル内の有効なスタッフ全員の申請表 */
     public RequestTableView getTable(Cycle cycle) {
         Map<Long, Map<LocalDate, ShiftRequest>> requests = shiftRequestRepository

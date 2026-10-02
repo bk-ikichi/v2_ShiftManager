@@ -1,12 +1,14 @@
 package jp.bk.shiftmanager.controller;
 
 import java.time.LocalDate;
+import java.util.List;
 import jp.bk.shiftmanager.exception.BusinessException;
 import jp.bk.shiftmanager.form.RequestEditForm;
 import jp.bk.shiftmanager.service.AdminRequestService;
 import jp.bk.shiftmanager.util.TimeSlots;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /** 申請の閲覧・代理編集（管理者） */
@@ -30,6 +33,18 @@ public class AdminRequestController {
     public String table(@RequestParam(required = false) String date, Model model) {
         model.addAttribute("view", adminRequestService.getTable(adminRequestService.resolveCycle(date)));
         return "admin/requests/table";
+    }
+
+    /** 申請一覧のドラッグで変えたスタッフの並び順を保存する（画面の fetch から呼ぶ） */
+    @PostMapping("/order")
+    @ResponseBody
+    public ResponseEntity<String> saveOrder(@RequestParam List<Long> userIds) {
+        try {
+            adminRequestService.saveOrder(userIds);
+            return ResponseEntity.ok().build();
+        } catch (BusinessException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/edit")
