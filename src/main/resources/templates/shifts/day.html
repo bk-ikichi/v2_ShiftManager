@@ -25,15 +25,17 @@
         <span th:text="${item.label}">キッチン</span>
       </li>
     </ul>
-    <!-- 時間軸の見出し（2時間おき）。名前の列の幅（w-20）だけ右にずらす -->
-    <div class="flex text-xs text-stone-500">
+    <!-- 時間軸の見出し（1時間おき）。名前の列の幅（w-20）だけ右にずらす -->
+    <div class="flex text-[10px] text-stone-500 sm:text-xs">
       <span class="w-20 shrink-0"></span>
       <div class="relative h-4 flex-1">
-        <span th:each="h : ${#numbers.sequence(8, 22, 2)}" class="absolute -translate-x-1/2 tabular-nums"
+        <span th:each="h : ${#numbers.sequence(8, 23)}" class="absolute -translate-x-1/2 tabular-nums"
               th:style="|left:${(h - 8) * 100 / 15.0}%|" th:text="${h}">8</span>
       </div>
     </div>
-    <section th:each="g : ${view.groups}" class="mt-2">
+    <!-- ポジションの境目が分かるよう、2つ目以降のポジションの上に横線を引く -->
+    <section th:each="g, gStat : ${view.groups}" class="mt-2"
+             th:classappend="${!gStat.first} ? 'border-t border-stone-300 pt-2'">
       <h2 class="mb-1 text-sm font-bold" th:text="${g.positionName}">キッチン</h2>
       <div th:each="r : ${g.rows}" class="flex items-center"
            th:classappend="${r.mine} ? 'bg-amber-50 font-bold'">
@@ -41,10 +43,11 @@
         <div class="time-grid relative h-8 flex-1">
           <div class="absolute inset-y-1 flex items-center justify-center overflow-hidden whitespace-nowrap rounded text-xs tabular-nums"
                th:classappend="${r.barClass}" th:style="${r.barStyle}">
-            <span th:if="${r.labelInside}" th:text="${r.timeLabel}">09:00〜17:00</span>
+            <!-- 短い勤務はスマホ幅では収まらないため、sm以上の幅でだけバーの中に書く -->
+            <span th:text="${r.timeLabel}" th:classappend="${!r.labelInside} ? 'max-sm:hidden'">09:00〜17:00</span>
           </div>
           <span th:unless="${r.labelInside}"
-                class="absolute inset-y-0 flex items-center whitespace-nowrap px-1 text-xs tabular-nums"
+                class="absolute inset-y-0 flex items-center whitespace-nowrap px-1 text-xs tabular-nums sm:hidden"
                 th:style="${r.labelStyle}" th:text="${r.timeLabel}">17:00〜19:00</span>
         </div>
       </div>
