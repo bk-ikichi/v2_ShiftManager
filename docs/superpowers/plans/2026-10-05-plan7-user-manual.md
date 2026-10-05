@@ -103,7 +103,7 @@ src/test/java/jp/bk/shiftmanager/
 
 この時点では画像はまだないため、ヘルプ画面の画像はリンク切れで表示される（Task 3で生成する）。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `src/test/java/jp/bk/shiftmanager/controller/HelpTest.java`
 
