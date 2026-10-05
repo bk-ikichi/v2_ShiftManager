@@ -496,7 +496,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 この時点では画像はまだないため、リンク切れで表示される（Task 3で生成する）。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `HelpTest` に追加する。
 
@@ -512,12 +512,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
     }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=HelpTest`
 Expected: `管理者向けの使い方は管理者だけが表示できる` が FAIL（テンプレート `help/admin` がなく500）
 
-- [ ] **Step 3: 管理者用の本文を作る**
+- [x] **Step 3: 管理者用の本文を作る**
 
 `src/main/resources/templates/help/admin.html`
 
@@ -697,7 +697,7 @@ Expected: `管理者向けの使い方は管理者だけが表示できる` が 
 </html>
 ```
 
-- [ ] **Step 4: CSSをビルドしてテストを通す**
+- [x] **Step 4: CSSをビルドしてテストを通す**
 
 Run: `npm run build`、続けて `./mvnw test -Dtest=HelpTest`
 Expected: PASS
@@ -706,7 +706,7 @@ Expected: PASS
 
 アプリを起動し、管理者でログインしてPC幅で `/admin/help` を開く。目次のリンク、スタッフ向けへのリンクが動くこと、レイアウトが崩れていないことを確認する（画像はリンク切れでよい）。
 
-- [ ] **Step 6: 全テストを流してコミットし、チェックボックスを更新する**
+- [x] **Step 6: 全テストを流してコミットし、チェックボックスを更新する**
 
 Run: `./mvnw test`
 Expected: PASS
