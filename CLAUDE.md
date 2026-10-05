@@ -40,3 +40,4 @@
   2. `- [ ]` が残っている最初の `### Task N` を Grep で探し、その Task の範囲だけを Read（offset/limit指定）で読む
   3. その Task の Interfaces に書かれた既存クラスだけを必要に応じて読む
 - テスト実行には Docker Desktop の起動が必要（Testcontainers）
+- 画面（テンプレート・CSS・画面の動き）を変えたら、`npm run manual` を実行して使い方の画像とPDFを作り直し、一緒にコミットする（Docker Desktop で `docker compose up -d db`、Edge が必要）

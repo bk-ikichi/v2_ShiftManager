@@ -1,11 +1,16 @@
 package jp.bk.shiftmanager.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import jp.bk.shiftmanager.IntegrationTestBase;
 import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.entity.User;
@@ -69,5 +74,46 @@ class HelpTest extends IntegrationTestBase {
         data.requirePasswordChange(hanako);
         mvc.perform(get("/help").with(user(data.login(hanako))))
                 .andExpect(redirectedUrl("/password"));
+    }
+
+    @Test
+    void スタッフ向けのPDFはログインした人が取得できる() throws Exception {
+        mvc.perform(get("/manual/staff.pdf").with(user(staff)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"));
+        mvc.perform(get("/manual/staff.pdf")).andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void 管理者向けのPDFと画像は管理者だけが取得できる() throws Exception {
+        mvc.perform(get("/admin/manual/admin.pdf").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/pdf"));
+        mvc.perform(get("/admin/manual/admin.pdf").with(user(staff))).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/manual/images/shifts.png").with(user(staff))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void スタッフ向けの使い方の画像がすべて取得できる() throws Exception {
+        assertImagesExist("/help", staff, 7);
+    }
+
+    @Test
+    void 管理者向けの使い方の画像がすべて取得できる() throws Exception {
+        assertImagesExist("/admin/help", admin, 9);
+    }
+
+    /** ヘルプ画面の img の src をすべて取得し、画像が取得できることを確認する */
+    private void assertImagesExist(String page, LoginUser loginUser, int expectedCount) throws Exception {
+        String html = mvc.perform(get(page).with(user(loginUser))).andReturn().getResponse().getContentAsString();
+        List<String> sources = new ArrayList<>();
+        Matcher matcher = Pattern.compile("<img src=\"([^\"]+)\"").matcher(html);
+        while (matcher.find()) {
+            sources.add(matcher.group(1));
+        }
+        assertThat(sources).hasSize(expectedCount);
+        for (String source : sources) {
+            mvc.perform(get(source).with(user(loginUser))).andExpect(status().isOk());
+        }
     }
 }
