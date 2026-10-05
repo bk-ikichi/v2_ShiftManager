@@ -44,6 +44,16 @@ class HelpTest extends IntegrationTestBase {
     }
 
     @Test
+    void 管理者向けの使い方は管理者だけが表示できる() throws Exception {
+        mvc.perform(get("/admin/help").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("使い方（管理者向け）")))
+                .andExpect(content().string(Matchers.containsString("href=\"/admin/manual/admin.pdf\"")))
+                .andExpect(content().string(Matchers.containsString("href=\"/help\"")));
+        mvc.perform(get("/admin/help").with(user(staff))).andExpect(status().isForbidden());
+    }
+
+    @Test
     void ヘッダーに使い方のリンクがある() throws Exception {
         mvc.perform(get("/mypage").with(user(staff)))
                 .andExpect(content().string(Matchers.containsString("href=\"/help\"")));
