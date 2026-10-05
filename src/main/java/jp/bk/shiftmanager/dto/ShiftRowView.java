@@ -19,4 +19,8 @@ public class ShiftRowView {
     private String requestNote;
     /** 申請との差分の警告（なければnull） */
     private String warning;
+    /** バーの色のクラス（名前・IN・OUTのどれかが未選択、またはIN ≥ OUTならnull） */
+    private String barClass;
+    /** バーの左端と幅（バーを出さない行はnull） */
+    private String barStyle;
 }

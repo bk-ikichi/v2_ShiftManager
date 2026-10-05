@@ -17,6 +17,8 @@ public class ShiftDayView {
     private boolean published;
     /** ポジションの表示順 */
     private List<ShiftGroupView> groups;
+    /** 社員（管理者）のバーの色のクラス。名前を選び直したときに shifts.js が使う */
+    private String employeeBarClass;
     /** その日の申請（名前を選んだときの表示に使う） */
     private List<ShiftRequestInfo> requests;
     /** 「+ 追加する」で追加する行の最初の添字 */

@@ -889,7 +889,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `ShiftDayView.getEmployeeBarClass()`：`BarColor.EMPLOYEE_CLASS`
   - HTMLのdata属性：`section[data-group]` の `data-bar-class`、`option` の `data-admin`、`#shift-form` の `data-employee-bar-class`、行内のバー要素 `[data-bar]`
 
-- [ ] **Step 1: 転記画面の失敗するテストを書く**
+- [x] **Step 1: 転記画面の失敗するテストを書く**
 
 `ShiftDayTest` に追加：
 
@@ -965,12 +965,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
     }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw -q test -Dtest=ShiftDayTest,ShiftSaveTest`
 Expected: コンパイルエラー（`getBarClass`・`isAdmin` がない）
 
-- [ ] **Step 3: DTOを変更する**
+- [x] **Step 3: DTOを変更する**
 
 `ShiftCandidate.java` に追加（`name` の下）：
 
@@ -1002,7 +1002,7 @@ Expected: コンパイルエラー（`getBarClass`・`isAdmin` がない）
     private String employeeBarClass;
 ```
 
-- [ ] **Step 4: ShiftServiceを変更する**
+- [x] **Step 4: ShiftServiceを変更する**
 
 `toCandidate`：
 
@@ -1072,12 +1072,12 @@ Expected: コンパイルエラー（`getBarClass`・`isAdmin` がない）
 
 `parseId` は数値でなければnullを返すため、`usersById.get(null)` はnullになる（`HashMap` 由来の `Collectors.toMap` はnullキーの `get` を許す）。import に `jp.bk.shiftmanager.util.BarColor`、`jp.bk.shiftmanager.util.TimeBar` を追加する。
 
-- [ ] **Step 5: テストが通ることを確認する**
+- [x] **Step 5: テストが通ることを確認する**
 
 Run: `./mvnw -q test -Dtest=ShiftDayTest,ShiftSaveTest`
 Expected: `data-bar-class` などHTMLを確かめるテスト以外はPASS（テンプレートは次のステップで変更する）
 
-- [ ] **Step 6: テンプレートを変更する**
+- [x] **Step 6: テンプレートを変更する**
 
 `templates/admin/shifts/day.html`：
 - `<form id="shift-form" ...>` に `th:data-employee-bar-class="${view.employeeBarClass}"` を追加する
@@ -1103,12 +1103,12 @@ Expected: `data-bar-class` などHTMLを確かめるテスト以外はPASS（テ
     </td>
 ```
 
-- [ ] **Step 7: テストが通ることを確認する**
+- [x] **Step 7: テストが通ることを確認する**
 
 Run: `./mvnw -q test -Dtest=ShiftDayTest,ShiftSaveTest`
 Expected: PASS
 
-- [ ] **Step 8: shifts.jsにバーの描き直しを追加する**
+- [x] **Step 8: shifts.jsにバーの描き直しを追加する**
 
 `refreshRow` の定義の直前に追加：
 
@@ -1147,7 +1147,7 @@ Expected: PASS
     refreshBar(row);
 ```
 
-- [ ] **Step 9: ブラウザで確認する**
+- [x] **Step 9: ブラウザで確認する**
 
 `npm run build` の後にアプリを起動し、`/admin/shifts?date=...` を開く。確認すること：
 - 登録済みの行にバーが出て、日別一覧と同じ位置・色
@@ -1158,7 +1158,7 @@ Expected: PASS
 
 確認後、起動したアプリを停止する。
 
-- [ ] **Step 10: 仕様書を更新する**
+- [x] **Step 10: 仕様書を更新する**
 
 `documents/2026-09-25-shift-manager-v2-spec.md` の「確定シフトの転記（管理者）」の「画面構成」の箇条書きの末尾に追記：
 
@@ -1166,12 +1166,12 @@ Expected: PASS
 - 各行の右端に、8:00〜23:00の時間軸上でIN〜OUTを表すミニバーを表示する。色は、管理者なら緑（社員）、それ以外はその行のポジションの色。名前・IN・OUTを変えるとその場で描き直す。名前・IN・OUTのどれかが未選択、またはIN ≥ OUTの行には出さない（2026-10-02 追加）
 ```
 
-- [ ] **Step 11: 全テストを実行する**
+- [x] **Step 11: 全テストを実行する**
 
 Run: `./mvnw -q test`
 Expected: PASS
 
-- [ ] **Step 12: コミットし、この計画のTask 3のチェックボックスを更新する**
+- [x] **Step 12: コミットし、この計画のTask 3のチェックボックスを更新する**
 
 ```bash
 git add -A src/main/java src/main/resources/templates src/main/resources/static/js src/test documents docs/superpowers/plans/2026-10-02-plan6-shift-time-bar.md

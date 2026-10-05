@@ -9,10 +9,12 @@
         <option value="">--</option>
         <optgroup th:if="${!#lists.isEmpty(g.primaryCandidates)}" th:label="${g.positionName}">
           <option th:each="c : ${g.primaryCandidates}" th:value="${c.userId}" th:text="${c.name}"
+                  th:data-admin="${c.admin}"
                   th:selected="${row != null and c.userId == row.userId}">山田太郎</option>
         </optgroup>
         <optgroup th:if="${!#lists.isEmpty(g.otherCandidates)}" label="その他">
           <option th:each="c : ${g.otherCandidates}" th:value="${c.userId}" th:text="${c.name}"
+                  th:data-admin="${c.admin}"
                   th:selected="${row != null and c.userId == row.userId}">佐藤花子</option>
         </optgroup>
       </select>
@@ -37,6 +39,13 @@
     <td class="px-2 py-3 text-center text-stone-600" data-request-end th:text="${row?.requestEnd}">18:00</td>
     <!-- 申請の備考は常に表示する -->
     <td class="w-64 px-2 py-3 text-xs text-stone-700" data-note th:text="${row?.requestNote}"></td>
+    <!-- 時間のミニバー（名前・IN・OUTを変えると shifts.js が描き直す） -->
+    <td class="px-2 py-3">
+      <div class="time-grid relative h-5 w-40 rounded bg-stone-50">
+        <div data-bar class="absolute inset-y-0.5 rounded" th:classappend="${row?.barClass}"
+             th:style="${row?.barStyle}" th:hidden="${row?.barStyle == null}"></div>
+      </div>
+    </td>
     <td class="px-2 py-3 text-right">
       <button type="button" data-clear class="text-xs text-stone-500 underline">クリア</button>
     </td>

@@ -33,10 +33,12 @@ import jp.bk.shiftmanager.repository.ShiftChangeRepository;
 import jp.bk.shiftmanager.repository.ShiftRepository;
 import jp.bk.shiftmanager.repository.ShiftRequestRepository;
 import jp.bk.shiftmanager.repository.UserRepository;
+import jp.bk.shiftmanager.util.BarColor;
 import jp.bk.shiftmanager.util.Cycle;
 import jp.bk.shiftmanager.util.DateLabels;
 import jp.bk.shiftmanager.util.ShiftChanges;
 import jp.bk.shiftmanager.util.ShiftWarnings;
+import jp.bk.shiftmanager.util.TimeBar;
 import jp.bk.shiftmanager.util.TimeRange;
 import jp.bk.shiftmanager.util.TimeSlots;
 import lombok.RequiredArgsConstructor;
@@ -219,16 +221,17 @@ public class ShiftService {
             }
             List<ShiftRowView> rows = new ArrayList<>();
             for (ShiftRowForm input : inputs) {
-                rows.add(toRowView(index++, input, requests));
+                rows.add(toRowView(index++, input, requests, position, usersById));
             }
             if (addBlankRows) {
                 for (int i = 0; i < BLANK_ROWS; i++) {
-                    rows.add(toRowView(index++, new ShiftRowForm(), requests));
+                    rows.add(toRowView(index++, new ShiftRowForm(), requests, position, usersById));
                 }
             }
             ShiftGroupView group = new ShiftGroupView();
             group.setPositionId(position.getId());
             group.setPositionName(position.getName());
+            group.setBarClass(BarColor.ofKey(position.getColor()).getBarClass());
             group.setPrimaryCandidates(candidates.stream()
                     .filter(user -> position.getId().equals(user.getPositionId()))
                     .map(this::toCandidate).toList());
@@ -248,6 +251,7 @@ public class ShiftService {
         view.setNextLabel(DateLabels.monthDayWeek(date.plusDays(1)));
         view.setPublished(publishedDateRepository.isPublished(date));
         view.setGroups(groups);
+        view.setEmployeeBarClass(BarColor.EMPLOYEE_CLASS);
         // 「希望シフトを反映する」で上から順に入るよう、INの早い順 → 名前の順にする
         view.setRequests(requests.values().stream()
                 .filter(request -> usersById.containsKey(request.getUserId()))
@@ -283,12 +287,22 @@ public class ShiftService {
                 .toList();
     }
 
-    private ShiftRowView toRowView(int index, ShiftRowForm input, Map<String, ShiftRequest> requests) {
+    private ShiftRowView toRowView(int index, ShiftRowForm input, Map<String, ShiftRequest> requests,
+            Position position, Map<Long, User> usersById) {
         ShiftRowView row = new ShiftRowView();
         row.setIndex(index);
         row.setUserId(input.getUserId());
         row.setStartTime(input.getStartTime());
         row.setEndTime(input.getEndTime());
+        LocalTime start = parseTimeOrNull(input.getStartTime());
+        LocalTime end = parseTimeOrNull(input.getEndTime());
+        TimeBar bar = TimeBar.of(start, end);
+        if (!isBlank(input.getUserId()) && bar != null) {
+            // 存在しないスタッフID（登録時に入力エラーになる）は管理者でないものとして扱う
+            User user = usersById.get(parseId(input.getUserId()));
+            row.setBarClass(BarColor.barClass(position.getColor(), user != null && user.isAdmin()));
+            row.setBarStyle(bar.style());
+        }
         if (isBlank(input.getUserId())) {
             row.setRequestStart("");
             row.setRequestEnd("");
@@ -299,8 +313,7 @@ public class ShiftService {
         row.setRequestEnd(request == null ? NO_REQUEST_TIME : TimeSlots.format(request.getEndTime()));
         row.setRequestNote(request == null ? null : request.getNote());
         TimeRange requested = request == null ? null : new TimeRange(request.getStartTime(), request.getEndTime());
-        row.setWarning(ShiftWarnings.of(parseTimeOrNull(input.getStartTime()), parseTimeOrNull(input.getEndTime()),
-                requested));
+        row.setWarning(ShiftWarnings.of(start, end, requested));
         return row;
     }
 
@@ -323,7 +336,7 @@ public class ShiftService {
     }
 
     private ShiftCandidate toCandidate(User user) {
-        return new ShiftCandidate(user.getId().toString(), user.getName());
+        return new ShiftCandidate(user.getId().toString(), user.getName(), user.isAdmin());
     }
 
     private ShiftRequestInfo toRequestInfo(ShiftRequest request, User user) {

@@ -42,8 +42,36 @@
     return '';
   };
 
-  // 名前に応じて申請IN・OUT・備考・警告を表示し直す
+  // 時間のミニバー（TimeBar と同じ式：8:00〜23:00を100%とする）
+  const BAR_FIRST = 8 * 60;
+  const BAR_SPAN = 15 * 60;
+  const BAR_BASE_CLASS = 'absolute inset-y-0.5 rounded';
+  const minutesOf = (hhmm) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const percentOf = (minutes) => `${(minutes * 100 / BAR_SPAN).toFixed(4)}%`;
+  const refreshBar = (row) => {
+    const bar = row.querySelector('[data-bar]');
+    const select = row.querySelector('select[data-user]');
+    const start = row.querySelector('select[data-in]').value;
+    const end = row.querySelector('select[data-out]').value;
+    // 時刻は HH:mm のため文字列のまま比較できる
+    if (!select.value || !start || !end || start >= end) {
+      bar.hidden = true;
+      return;
+    }
+    const admin = select.selectedOptions[0].dataset.admin === 'true';
+    const colorClass = admin ? form.dataset.employeeBarClass : row.closest('[data-group]').dataset.barClass;
+    bar.className = `${BAR_BASE_CLASS} ${colorClass}`;
+    bar.style.left = percentOf(minutesOf(start) - BAR_FIRST);
+    bar.style.width = percentOf(minutesOf(end) - minutesOf(start));
+    bar.hidden = false;
+  };
+
+  // 名前・IN・OUTに応じてバー・申請IN・OUT・備考・警告を表示し直す
   const refreshRow = (row) => {
+    refreshBar(row);
     const userId = row.querySelector('select[data-user]').value;
     const request = requests.get(userId);
     const note = row.querySelector('[data-note]');
