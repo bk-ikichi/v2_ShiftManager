@@ -13,7 +13,7 @@
 </head>
 <body>
 <!-- PC（lg以上）は横並び、スマホは右から出るメニュー。開閉はheaderのdata-open属性で切り替える（nav.js） -->
-<header th:fragment="header" id="site-header" class="group border-b border-stone-200 bg-white">
+<header th:fragment="header" id="site-header" class="group border-b border-stone-200 bg-white print:hidden">
   <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 text-base">
     <a th:href="@{/}" class="shrink-0 text-xl font-bold">シフト管理</a>
     <button type="button" data-nav-open aria-controls="site-nav" aria-expanded="false" aria-label="メニューを開く"
@@ -49,6 +49,7 @@
       <div class="flex gap-1 max-lg:mt-2 max-lg:flex-col max-lg:border-t max-lg:border-stone-200 max-lg:pt-3
                   lg:ml-auto lg:items-center">
         <span class="px-3 py-2 text-stone-500" sec:authentication="principal.name">名前</span>
+        <a th:replace="~{layout :: navLink('/help', '使い方')}"></a>
         <a th:replace="~{layout :: navLink('/mypage', 'マイページ')}"></a>
         <form th:action="@{/logout}" method="post">
           <button class="w-full whitespace-nowrap rounded px-3 py-2 text-left hover:bg-stone-100">ログアウト</button>

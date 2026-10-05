@@ -162,7 +162,7 @@ class HelpTest extends IntegrationTestBase {
 
     @Test
     void 未ログインではログイン画面へ移動する() throws Exception {
-        mvc.perform(get("/help")).andExpect(redirectedUrlPattern("**/login"));
+        mvc.perform(get("/help")).andExpect(redirectedUrl("/login"));
     }
 
     @Test
@@ -462,7 +462,7 @@ public class HelpController {
 
 - [ ] **Step 8: CSSをビルドしてテストを通す**
 
-Run: `npm run build`、続けて `./mvnw test -Dtest=HelpTest+HeaderNavTest`
+Run: `npm run build`、続けて `./mvnw test -Dtest=HelpTest,HeaderNavTest`
 Expected: PASS（`HeaderNavTest` が既存のヘッダーの動きを壊していないこと）
 
 - [ ] **Step 9: 画面を目で確認する**
@@ -747,7 +747,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
         mvc.perform(get("/manual/staff.pdf").with(user(staff)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/pdf"));
-        mvc.perform(get("/manual/staff.pdf")).andExpect(redirectedUrlPattern("**/login"));
+        mvc.perform(get("/manual/staff.pdf")).andExpect(redirectedUrl("/login"));
     }
 
     @Test

@@ -26,4 +26,42 @@
       transparent 0, transparent calc(100% / 15 - 1px),
       var(--color-stone-200) calc(100% / 15 - 1px), var(--color-stone-200) calc(100% / 15));
   }
+  /* 使い方（ヘルプ画面）の本文 */
+  .help h2 {
+    @apply mt-10 mb-3 border-b border-stone-300 pb-1 text-lg font-bold;
+  }
+  .help h3 {
+    @apply mt-6 mb-2 font-bold;
+  }
+  .help p {
+    @apply my-2 leading-relaxed;
+  }
+  .help ol {
+    @apply my-2 list-decimal space-y-1 pl-6;
+  }
+  .help ul {
+    @apply my-2 list-disc space-y-1 pl-6;
+  }
+  .help section a,
+  .help nav a {
+    @apply text-amber-800 underline;
+  }
+  .help .note {
+    @apply my-3 rounded bg-amber-50 p-3 text-sm text-amber-900;
+  }
+  /* 印刷（PDF）：章ごとに改ページし、画像の途中で改ページしない。縦に長い画像は1ページに収める */
+  @media print {
+    .help section {
+      break-before: page;
+    }
+    .help figure {
+      break-inside: avoid;
+    }
+    .help figure img {
+      width: auto;
+      max-width: 100%;
+      max-height: 230mm;
+      margin-inline: auto;
+    }
+  }
 }
