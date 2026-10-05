@@ -27,6 +27,18 @@ $env:STAFF_INITIAL_PASSWORD = "（共通の初期パスワード）"
 ./mvnw spring-boot:run
 ```
 
+## 使い方（取扱説明書）の画像とPDF
+アプリ内の使い方（`/help`・`/admin/help`）の画像と、そこからダウンロードできるPDFは、次のコマンドで作り直す。画面を変えたら実行してコミットする。
+
+```
+docker compose up -d db
+npm run manual
+```
+
+- 説明書専用のDB `shiftmanager_manual` を作り直し、アプリを8081で起動してデモデータ（`scripts/manual/demo-data.sql`）を入れ、PCのEdgeで撮影とPDF出力を行う。普段の開発DBには触れない
+- デモデータの日付は実行した日からの相対で作るため、実行するたびに画像の日付は変わる
+- 失敗したときはアプリのログ `target/manual-app.log` を確認する
+
 ## 本番環境（Render + Neon）
 - アプリ：Render の Web Service（Language：Docker、Branch：`main`、Region：Singapore）。ルートの `Dockerfile` でビルドする
 - DB：Neon（PostgreSQL 17、Region：AWS Asia Pacific (Singapore)）。Connection pooling はオフ（`-pooler` なしのホスト）で接続する

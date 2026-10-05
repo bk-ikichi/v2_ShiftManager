@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 使い方の画面の画像。phone が true ならスマホの画像として幅を抑えて中央に置く -->
+<figure th:fragment="shot(src, caption, phone)" class="my-4">
+  <img th:src="@{${src}}" th:alt="${caption}" class="rounded border border-stone-200"
+       th:classappend="${phone} ? 'mx-auto w-full max-w-xs' : 'w-full'">
+  <figcaption th:text="${caption}" class="mt-1 text-center text-xs text-stone-500">説明</figcaption>
+</figure>
+</body>
+</html>

@@ -3,10 +3,12 @@
   "private": true,
   "scripts": {
     "build": "tailwindcss -i ./src/main/frontend/app.css -o ./src/main/resources/static/css/app.css --minify",
-    "watch": "tailwindcss -i ./src/main/frontend/app.css -o ./src/main/resources/static/css/app.css --watch"
+    "watch": "tailwindcss -i ./src/main/frontend/app.css -o ./src/main/resources/static/css/app.css --watch",
+    "manual": "node scripts/manual/build.mjs"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
+    "playwright-core": "^1.63.0",
     "tailwindcss": "^4.3.3"
   }
 }
