@@ -8,6 +8,8 @@ import lombok.Data;
 public class ShiftGroupView {
     private long positionId;
     private String positionName;
+    /** ポジションの色のクラス（管理者以外のバーに使う） */
+    private String barClass;
     /** そのポジションを初期ポジションとするスタッフ（名前の順） */
     private List<ShiftCandidate> primaryCandidates;
     /** その他のスタッフ（ポジションの表示順、未設定は最後 → 名前の順） */

@@ -224,6 +224,28 @@ class ShiftSaveTest extends IntegrationTestBase {
         assertThat(shiftMapper.findByDate(OCT2)).isEmpty();
     }
 
+    @Test
+    void 登録できずに表示し直すとき_時刻が不正な行にはバーを出さない() throws Exception {
+        String[][] invalid = {{"13:00", "12:00"}, {"12:00", "12:00"}, {"abc", "12:00"}, {"09:00", ""}};
+        for (String[] times : invalid) {
+            MockHttpServletRequestBuilder request = save("2026-10-02");
+            row(request, 0, kitchen, taro, times[0], times[1]);
+            MvcResult result = mvc.perform(request).andExpect(status().isOk()).andReturn();
+            ShiftDayView view = (ShiftDayView) result.getModelAndView().getModel().get("view");
+            assertThat(view.getGroups().get(0).getRows().get(0).getBarStyle()).isNull();
+        }
+
+        // 存在しないスタッフIDでも、時刻が正しければポジションの色でバーを出す
+        MvcResult result = mvc.perform(save("2026-10-02")
+                        .param("rows[0].positionId", kitchen.getId().toString()).param("rows[0].userId", "99999")
+                        .param("rows[0].startTime", "09:00").param("rows[0].endTime", "17:00"))
+                .andExpect(status().isOk())
+                .andReturn();
+        ShiftDayView view = (ShiftDayView) result.getModelAndView().getModel().get("view");
+        assertThat(view.getGroups().get(0).getRows().get(0).getBarClass()).isEqualTo("bg-stone-300 text-stone-950");
+        assertThat(view.getGroups().get(0).getRows().get(0).getBarStyle()).isEqualTo("left:6.6667%;width:53.3333%");
+    }
+
     private MockHttpServletRequestBuilder save(String date) {
         return post("/admin/shifts").with(user(admin)).with(csrf()).param("date", date);
     }

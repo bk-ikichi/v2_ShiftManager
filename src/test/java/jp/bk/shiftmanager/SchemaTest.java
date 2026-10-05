@@ -32,4 +32,12 @@ class SchemaTest {
                 "SELECT deadline_days_before FROM app_settings WHERE id = 1", Integer.class);
         assertThat(days).isEqualTo(5);
     }
+
+    @Test
+    void ポジションの色の初期値はgray() {
+        jdbc.update("INSERT INTO positions (name, display_order) VALUES ('色テスト', 1)");
+        String color = jdbc.queryForObject("SELECT color FROM positions WHERE name = '色テスト'", String.class);
+        jdbc.update("DELETE FROM positions WHERE name = '色テスト'");
+        assertThat(color).isEqualTo("gray");
+    }
 }

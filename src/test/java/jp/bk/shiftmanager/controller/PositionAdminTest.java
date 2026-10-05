@@ -1,6 +1,7 @@
 package jp.bk.shiftmanager.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -126,6 +127,59 @@ class PositionAdminTest extends IntegrationTestBase {
                 .andExpect(flash().attribute("error", "使用中のため削除できません。非表示にしてください"));
 
         assertThat(positionMapper.findById(kitchen.getId())).isNotNull();
+    }
+
+    @Test
+    void 色を選んで追加_変更できる_省略時はグレー() throws Exception {
+        mvc.perform(post("/admin/positions").with(user(admin)).with(csrf())
+                        .param("name", "キッチン").param("displayOrder", "1").param("color", "sky"))
+                .andExpect(redirectedUrl("/admin/positions"));
+        mvc.perform(post("/admin/positions").with(user(admin)).with(csrf())
+                        .param("name", "ホール").param("displayOrder", "2"))
+                .andExpect(redirectedUrl("/admin/positions"));
+
+        List<Position> all = positionMapper.findAll();
+        assertThat(all).extracting(Position::getName, Position::getColor)
+                .containsExactly(tuple("キッチン", "sky"), tuple("ホール", "gray"));
+
+        mvc.perform(post("/admin/positions/{id}", all.get(1).getId()).with(user(admin)).with(csrf())
+                        .param("name", "ホール").param("displayOrder", "2").param("color", "pink"))
+                .andExpect(redirectedUrl("/admin/positions"));
+        assertThat(positionMapper.findById(all.get(1).getId()).getColor()).isEqualTo("pink");
+    }
+
+    @Test
+    void 選択肢にない色は入力エラーで保存されない() throws Exception {
+        Position kitchen = data.position("キッチン", 1);
+
+        // 社員の緑は選択肢にない
+        for (String color : new String[] {"green", ""}) {
+            mvc.perform(post("/admin/positions").with(user(admin)).with(csrf())
+                            .param("name", "ホール").param("displayOrder", "2").param("color", color))
+                    .andExpect(redirectedUrl("/admin/positions"))
+                    .andExpect(flash().attribute("error", "色を選択してください"));
+            mvc.perform(post("/admin/positions/{id}", kitchen.getId()).with(user(admin)).with(csrf())
+                            .param("name", "キッチン").param("displayOrder", "1").param("color", color))
+                    .andExpect(redirectedUrl("/admin/positions"))
+                    .andExpect(flash().attribute("error", "色を選択してください"));
+        }
+
+        assertThat(positionMapper.findAll()).extracting(Position::getName, Position::getColor)
+                .containsExactly(tuple("キッチン", "gray"));
+    }
+
+    @Test
+    void 一覧画面に色の選択肢と色見本を表示する() throws Exception {
+        Position kitchen = data.position("キッチン", 1);
+        kitchen.setColor("sky");
+        positionMapper.update(kitchen);
+
+        mvc.perform(get("/admin/positions").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("水色")))
+                .andExpect(content().string(Matchers.containsString("value=\"sky\" selected=\"selected\"")))
+                .andExpect(content().string(Matchers.containsString("bg-sky-300 text-sky-950")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("value=\"green\""))));
     }
 
     @Test

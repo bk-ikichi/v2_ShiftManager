@@ -5,6 +5,7 @@ import jp.bk.shiftmanager.entity.Position;
 import jp.bk.shiftmanager.exception.BusinessException;
 import jp.bk.shiftmanager.form.PositionForm;
 import jp.bk.shiftmanager.repository.PositionRepository;
+import jp.bk.shiftmanager.util.BarColor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,11 @@ public class PositionService {
         return positionRepository.findAll();
     }
 
+    /** 色の選択肢（定義順） */
+    public List<BarColor> colors() {
+        return List.of(BarColor.values());
+    }
+
     @Transactional
     public void create(PositionForm form) {
         checkNameUnique(form.getName(), 0);
@@ -26,6 +32,7 @@ public class PositionService {
         position.setName(form.getName());
         position.setDisplayOrder(form.getDisplayOrder());
         position.setHidden(form.isHidden());
+        position.setColor(validColor(form.getColor()));
         positionRepository.insert(position);
     }
 
@@ -36,6 +43,7 @@ public class PositionService {
         position.setName(form.getName());
         position.setDisplayOrder(form.getDisplayOrder());
         position.setHidden(form.isHidden());
+        position.setColor(validColor(form.getColor()));
         positionRepository.update(position);
     }
 
@@ -51,6 +59,12 @@ public class PositionService {
     private Position find(long id) {
         return positionRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("ポジションが見つかりません"));
+    }
+
+    /** 選択肢にない色（社員の緑を含む）は入力エラー */
+    private String validColor(String key) {
+        return BarColor.fromKey(key).map(BarColor::getKey)
+                .orElseThrow(() -> new BusinessException("色を選択してください"));
     }
 
     private void checkNameUnique(String name, long excludeId) {

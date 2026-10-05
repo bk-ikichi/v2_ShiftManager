@@ -10,4 +10,6 @@ public class ShiftCandidate {
     /** 画面の選択値と比べるため文字列にする */
     private String userId;
     private String name;
+    /** 管理者なら転記画面のバーを社員の緑にする */
+    private boolean admin;
 }

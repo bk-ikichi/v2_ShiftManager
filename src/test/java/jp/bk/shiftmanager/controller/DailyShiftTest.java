@@ -13,11 +13,14 @@ import jp.bk.shiftmanager.auth.LoginUser;
 import jp.bk.shiftmanager.dto.DailyShiftGroup;
 import jp.bk.shiftmanager.dto.DailyShiftRow;
 import jp.bk.shiftmanager.dto.DailyShiftView;
+import jp.bk.shiftmanager.dto.LegendItem;
 import jp.bk.shiftmanager.entity.Position;
 import jp.bk.shiftmanager.entity.User;
+import jp.bk.shiftmanager.mapper.PositionMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -30,6 +33,9 @@ class DailyShiftTest extends IntegrationTestBase {
     /** 前月1日（スタッフが閲覧できる最も古い日） */
     private static final LocalDate AUG1 = LocalDate.of(2026, 8, 1);
     private static final LocalDate JUL31 = LocalDate.of(2026, 7, 31);
+
+    @Autowired
+    PositionMapper positionMapper;
 
     LoginUser admin;
     Position kitchen;
@@ -204,6 +210,53 @@ class DailyShiftTest extends IntegrationTestBase {
     void ヘッダーから日別シフト一覧へ移動できる() throws Exception {
         mvc.perform(get("/shifts").with(user(data.login(taro))))
                 .andExpect(content().string(Matchers.containsString("href=\"/shifts\"")));
+    }
+
+    @Test
+    void バーの位置と色を持ち_管理者は社員の緑になる() throws Exception {
+        kitchen.setColor("sky");
+        positionMapper.update(kitchen);
+        User boss = data.user("boss2", "副店長", true);
+        data.shift(taro, kitchen, OCT2, "09:00", "17:00");
+        data.shift(boss, kitchen, OCT2, "17:00", "19:00");
+        data.publish(OCT2);
+
+        DailyShiftView view = view(data.login(taro), "2026-10-02");
+
+        assertThat(view.getGroups().get(0).getRows())
+                .extracting(DailyShiftRow::getName, DailyShiftRow::getBarClass, DailyShiftRow::getBarStyle,
+                        DailyShiftRow::isLabelInside, DailyShiftRow::getLabelStyle)
+                .containsExactly(
+                        tuple("山田太郎", "bg-sky-300 text-sky-950", "left:6.6667%;width:53.3333%", true, null),
+                        tuple("副店長", "bg-green-400 text-green-950", "left:60.0000%;width:13.3333%", false,
+                                "left:73.3333%"));
+        // 凡例はその日に出てくるポジション（表示順）と、管理者がいれば社員
+        assertThat(view.getLegend()).extracting(LegendItem::getLabel, LegendItem::getBarClass)
+                .containsExactly(tuple("キッチン", "bg-sky-300 text-sky-950"),
+                        tuple("社員", "bg-green-400 text-green-950"));
+    }
+
+    @Test
+    void 管理者のいない日は凡例に社員を出さない() throws Exception {
+        data.shift(taro, kitchen, OCT2, "09:00", "17:00");
+        data.shift(hanako, counter, OCT2, "12:00", "18:00");
+        data.publish(OCT2);
+
+        DailyShiftView view = view(data.login(taro), "2026-10-02");
+
+        assertThat(view.getLegend()).extracting(LegendItem::getLabel).containsExactly("キッチン", "カウンター");
+    }
+
+    @Test
+    void ガントチャートとして描画する() throws Exception {
+        data.shift(taro, kitchen, OCT2, "09:00", "17:00");
+        data.publish(OCT2);
+
+        mvc.perform(get("/shifts").param("date", "2026-10-02").with(user(data.login(taro))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("style=\"left:6.6667%;width:53.3333%\"")))
+                .andExpect(content().string(Matchers.containsString("bg-stone-300 text-stone-950")))
+                .andExpect(content().string(Matchers.containsString("09:00〜17:00")));
     }
 
     private DailyShiftView view(LoginUser me, String date) throws Exception {

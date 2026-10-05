@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @source "../resources/templates";
+/* バーの色のクラスはJavaのenumに書いているため、スキャン対象に入れる */
+@source "../java/jp/bk/shiftmanager/util/BarColor.java";
 
 /* 共通部品 */
 @layer components {
@@ -17,5 +19,11 @@
   }
   .card {
     @apply rounded-lg border border-stone-200 bg-white p-4;
+  }
+  /* 8:00〜23:00の時間軸に1時間おきの薄い縦線を引く（15等分） */
+  .time-grid {
+    background-image: repeating-linear-gradient(to right,
+      transparent 0, transparent calc(100% / 15 - 1px),
+      var(--color-stone-200) calc(100% / 15 - 1px), var(--color-stone-200) calc(100% / 15));
   }
 }

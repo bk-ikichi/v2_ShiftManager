@@ -1,6 +1,7 @@
 package jp.bk.shiftmanager.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -16,15 +17,23 @@ import jp.bk.shiftmanager.dto.ShiftRequestInfo;
 import jp.bk.shiftmanager.dto.ShiftRowView;
 import jp.bk.shiftmanager.entity.Position;
 import jp.bk.shiftmanager.entity.User;
+import jp.bk.shiftmanager.mapper.PositionMapper;
+import jp.bk.shiftmanager.mapper.UserMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MvcResult;
 
 /** 転記画面の表示（今日は2026-09-25（金）） */
 class ShiftDayTest extends IntegrationTestBase {
 
     private static final LocalDate OCT2 = LocalDate.of(2026, 10, 2);
+
+    @Autowired
+    PositionMapper positionMapper;
+    @Autowired
+    UserMapper userMapper;
 
     LoginUser admin;
     Position kitchen;
@@ -227,6 +236,48 @@ class ShiftDayTest extends IntegrationTestBase {
     void 一般スタッフは転記画面を開けない() throws Exception {
         mvc.perform(get("/admin/shifts").with(user(data.login(taro))))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void 登録済みの行にバーを付け_管理者は社員の緑になる() throws Exception {
+        kitchen.setColor("sky");
+        positionMapper.update(kitchen);
+        User boss = userMapper.findById(admin.getId());
+        data.shift(taro, kitchen, OCT2, "09:00", "17:00");
+        data.shift(boss, kitchen, OCT2, "17:00", "19:00");
+
+        ShiftDayView view = view("2026-10-02");
+
+        ShiftGroupView kitchenGroup = view.getGroups().get(0);
+        assertThat(kitchenGroup.getBarClass()).isEqualTo("bg-sky-300 text-sky-950");
+        assertThat(view.getEmployeeBarClass()).isEqualTo("bg-green-400 text-green-950");
+        assertThat(kitchenGroup.getRows())
+                .extracting(ShiftRowView::getUserId, ShiftRowView::getBarClass, ShiftRowView::getBarStyle)
+                .containsExactly(
+                        tuple(taro.getId().toString(), "bg-sky-300 text-sky-950", "left:6.6667%;width:53.3333%"),
+                        tuple(boss.getId().toString(), "bg-green-400 text-green-950", "left:60.0000%;width:13.3333%"));
+        assertThat(kitchenGroup.getOtherCandidates()).filteredOn(c -> c.getName().equals("店長"))
+                .extracting(ShiftCandidate::isAdmin).containsExactly(true);
+    }
+
+    @Test
+    void 空欄行にはバーを出さず_色はdata属性で渡す() throws Exception {
+        kitchen.setColor("sky");
+        positionMapper.update(kitchen);
+
+        ShiftDayView view = view("2026-10-02");
+        assertThat(view.getGroups().get(0).getRows()).allSatisfy(row -> {
+            assertThat(row.getBarClass()).isNull();
+            assertThat(row.getBarStyle()).isNull();
+        });
+
+        mvc.perform(get("/admin/shifts").param("date", "2026-10-02").with(user(admin)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("data-bar-class=\"bg-sky-300 text-sky-950\"")))
+                .andExpect(content().string(
+                        Matchers.containsString("data-employee-bar-class=\"bg-green-400 text-green-950\"")))
+                .andExpect(content().string(Matchers.containsString("data-admin=\"true\"")))
+                .andExpect(content().string(Matchers.containsString("data-bar")));
     }
 
     private ShiftDayView view(String date) throws Exception {

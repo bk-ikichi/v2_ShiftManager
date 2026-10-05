@@ -27,6 +27,7 @@ public class PositionAdminController {
     @GetMapping
     public String list(Model model) {
         model.addAttribute("positions", positionService.findAll());
+        model.addAttribute("colors", positionService.colors());
         return "admin/positions";
     }
 

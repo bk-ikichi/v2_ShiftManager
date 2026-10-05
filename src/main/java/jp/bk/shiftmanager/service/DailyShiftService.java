@@ -5,10 +5,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import jp.bk.shiftmanager.dto.DailyShiftGroup;
 import jp.bk.shiftmanager.dto.DailyShiftRow;
 import jp.bk.shiftmanager.dto.DailyShiftView;
+import jp.bk.shiftmanager.dto.LegendItem;
 import jp.bk.shiftmanager.entity.Position;
 import jp.bk.shiftmanager.entity.Shift;
 import jp.bk.shiftmanager.entity.User;
@@ -16,7 +18,9 @@ import jp.bk.shiftmanager.repository.PositionRepository;
 import jp.bk.shiftmanager.repository.PublishedDateRepository;
 import jp.bk.shiftmanager.repository.ShiftRepository;
 import jp.bk.shiftmanager.repository.UserRepository;
+import jp.bk.shiftmanager.util.BarColor;
 import jp.bk.shiftmanager.util.DateLabels;
+import jp.bk.shiftmanager.util.TimeBar;
 import jp.bk.shiftmanager.util.TimeSlots;
 import jp.bk.shiftmanager.util.ViewRange;
 import lombok.RequiredArgsConstructor;
@@ -77,23 +81,30 @@ public class DailyShiftService {
             return view;
         }
 
-        // 公開後に無効化されたスタッフのシフトも表示するため、無効を含む全員から名前を引く
-        Map<Long, String> names = userRepository.findAll().stream()
-                .collect(Collectors.toMap(User::getId, User::getName));
+        // 公開後に無効化されたスタッフのシフトも表示するため、無効を含む全員から引く
+        Map<Long, User> users = userRepository.findAll().stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
         // INの早い順
         List<Shift> shifts = shiftRepository.findByDate(date);
+        boolean employeeShown = false;
         // 非表示にしたポジションのシフトも表示するため、非表示を含む全ポジションで分ける
         for (Position position : positionRepository.findAll()) {
             List<DailyShiftRow> rows = shifts.stream()
                     .filter(shift -> shift.getPositionId().equals(position.getId()))
-                    .map(shift -> toRow(shift, names, viewerId))
+                    .map(shift -> toRow(shift, position, users.get(shift.getUserId()), viewerId))
                     .toList();
             if (!rows.isEmpty()) {
                 DailyShiftGroup group = new DailyShiftGroup();
                 group.setPositionName(position.getName());
                 group.setRows(rows);
                 view.getGroups().add(group);
+                view.getLegend().add(new LegendItem(position.getName(),
+                        BarColor.ofKey(position.getColor()).getBarClass()));
+                employeeShown |= rows.stream().anyMatch(row -> BarColor.EMPLOYEE_CLASS.equals(row.getBarClass()));
             }
+        }
+        if (employeeShown) {
+            view.getLegend().add(new LegendItem(BarColor.EMPLOYEE_LABEL, BarColor.EMPLOYEE_CLASS));
         }
         if (view.getGroups().isEmpty()) {
             view.setMessage("この日の出勤者はいません");
@@ -101,11 +112,17 @@ public class DailyShiftService {
         return view;
     }
 
-    private DailyShiftRow toRow(Shift shift, Map<Long, String> names, long viewerId) {
+    private DailyShiftRow toRow(Shift shift, Position position, User user, long viewerId) {
         DailyShiftRow row = new DailyShiftRow();
-        row.setName(names.get(shift.getUserId()));
+        row.setName(user.getName());
         row.setTimeLabel(TimeSlots.formatRange(shift.getStartTime(), shift.getEndTime()));
         row.setMine(shift.getUserId() == viewerId);
+        row.setBarClass(BarColor.barClass(position.getColor(), user.isAdmin()));
+        // DBの制約で IN < OUT のため、バーは必ず作られる
+        TimeBar bar = TimeBar.of(shift.getStartTime(), shift.getEndTime());
+        row.setBarStyle(bar.style());
+        row.setLabelInside(bar.labelInside());
+        row.setLabelStyle(bar.labelStyle());
         return row;
     }
 }

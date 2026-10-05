@@ -40,7 +40,7 @@
   </p>
 
   <form id="shift-form" th:action="@{/admin/shifts}" method="post" th:data-next-index="${view.nextIndex}"
-        th:data-published="${view.published}">
+        th:data-published="${view.published}" th:data-employee-bar-class="${view.employeeBarClass}">
     <input type="hidden" name="date" th:value="${view.date}">
     <input type="hidden" name="published" th:value="${view.published}">
     <!-- 申請をまだ入っていないスタッフの分だけ、初期ポジションの欄に入れる（登録は「登録する」で行う） -->
@@ -49,11 +49,12 @@
       <span class="text-xs text-stone-500">入力済みのスタッフはそのままです。反映後に「登録する」で保存されます。</span>
     </div>
     <p data-reflect-message class="mb-4 text-sm text-red-700" role="status" hidden></p>
-    <section th:each="g : ${view.groups}" class="mb-6" data-group th:data-position-id="${g.positionId}">
+    <section th:each="g : ${view.groups}" class="mb-6" data-group th:data-position-id="${g.positionId}"
+             th:data-bar-class="${g.barClass}">
       <h2 class="mb-2 font-bold" th:text="${g.positionName}">キッチン</h2>
       <div class="overflow-x-auto rounded-lg border border-stone-200 bg-white">
         <!-- スマホでは列が潰れないよう最小幅を持たせ、枠内で横スクロールさせる -->
-        <table class="w-full min-w-3xl border-collapse text-sm">
+        <table class="w-full min-w-4xl border-collapse text-sm">
           <thead>
           <tr class="whitespace-nowrap bg-stone-100 text-left">
             <th class="px-2 py-2">名前</th>
@@ -62,6 +63,7 @@
             <th class="px-2 py-2 text-center">申請IN</th>
             <th class="px-2 py-2 text-center">申請OUT</th>
             <th class="px-2 py-2">備考</th>
+            <th class="px-2 py-2 text-xs font-normal text-stone-500">8〜23時</th>
             <th class="px-2 py-2"></th>
           </tr>
           </thead>
