@@ -736,7 +736,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `/help`・`/admin/help`（Task 1・2）、ログイン画面のフォーム（`input[name="loginId"]`・`input[name="password"]`・「ログイン」ボタン）、ヘッダーのメニューボタン `[data-nav-open]`、`InitialAdminRunner`（ユーザーが0人なら `admin` を作る）、composeのサービス `db`（ユーザー・パスワード `shiftmanager`、ポート5433）
 - Produces: Global Constraints の「画像の一覧」のファイルとPDF2つ、`npm run manual`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `HelpTest` に追加する。`import java.util.regex.Matcher;`・`import java.util.regex.Pattern;`・`import java.util.ArrayList;`・`import java.util.List;`・`import static org.assertj.core.api.Assertions.assertThat;`・`import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;`（既存）を使う。
 
@@ -785,12 +785,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 Thymeleafは `th:src` を先頭の属性として出力する（`parts.html` で `img` の最初の属性が `th:src` のため `<img src="...` の形になる）。
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=HelpTest`
 Expected: 追加した4つが FAIL（PDF・画像がなく404）。`管理者向けのPDFと画像は管理者だけが取得できる` のうち403の確認は通るが、最初の200の確認で落ちる
 
-- [ ] **Step 3: playwright-core を入れ、npmスクリプトを足す**
+- [x] **Step 3: playwright-core を入れ、npmスクリプトを足す**
 
 Run: `npm install -D playwright-core`
 
@@ -800,7 +800,7 @@ Run: `npm install -D playwright-core`
     "manual": "node scripts/manual/build.mjs"
 ```
 
-- [ ] **Step 4: デモデータのSQLを書く**
+- [x] **Step 4: デモデータのSQLを書く**
 
 `scripts/manual/demo-data.sql`
 
@@ -897,7 +897,7 @@ WHERE (o + w.user_id) % 4 <> 0
 INSERT INTO cycle_unavailable (user_id, cycle_start) SELECT 5, c2 FROM demo;
 ```
 
-- [ ] **Step 5: 生成スクリプトを書く**
+- [x] **Step 5: 生成スクリプトを書く**
 
 `scripts/manual/build.mjs`
 
@@ -1117,7 +1117,7 @@ main().catch((error) => {
 });
 ```
 
-- [ ] **Step 6: 実行する**
+- [x] **Step 6: 実行する**
 
 Docker Desktop を起動し、`docker compose up -d db` を実行してから：
 
@@ -1126,23 +1126,23 @@ Expected: 「保存しました：…」が画像16枚とPDF2つ分表示され�
 
 失敗した場合は `target/manual-app.log` とエラーメッセージを見て直す。`demo-data.sql` のエラーは psql のメッセージに行番号が出る。
 
-- [ ] **Step 7: 画像とPDFを目で確認する**
+- [x] **Step 7: 画像とPDFを目で確認する**
 
 - 画像16枚：デモデータが入った状態で写っていること（空の画面になっていない）。`home.png` に「変更あり」が2件、`requests.png`（管理者）に未提出の行と「この期間は出勤できない」、`shifts.png`（管理者）に健の警告、`shifts-reflect.png` に「希望シフトを反映する」、`menu.png` にメニューが開いた状態が写っていること
 - PDF 2つ：ヘッダー・メニュー・ダウンロードボタンが出ていない、章ごとに改ページされる、画像が途中で切れていない、縦に長い `home.png` が1ページに収まっていること
 
-- [ ] **Step 8: 失敗時にアプリが残らないことを確認する（Review Focus 5）**
+- [x] **Step 8: 失敗時にアプリが残らないことを確認する（Review Focus 5）**
 
 1. アプリを8081で起動したまま（`./mvnw spring-boot:run "-Dspring-boot.run.arguments=--server.port=8081"`）`npm run manual` を実行し、「ポート8081は使用中です」で止まることを確認して、アプリを止める
 2. `docker compose stop db` の状態で実行し、「compose の DB が起動していません」で止まることを確認して、`docker compose up -d db` で戻す
 3. `build.mjs` の `adminShots` で、`settings.png` を撮る行の直前に `await page.click('#no-such-element', { timeout: 1000 });` を一時的に足して実行する。エラーで止まったあと、`http://localhost:8081/login` に接続できない（Windowsならタスクマネージャーにjavaのプロセスが残っていない）ことを確認する。確認後、足した行を消す
 
-- [ ] **Step 9: テストを通す**
+- [x] **Step 9: テストを通す**
 
 Run: `./mvnw test -Dtest=HelpTest`
 Expected: PASS（画像の枚数：スタッフ用7枚、管理者用9枚）
 
-- [ ] **Step 10: CLAUDE.md と README.md を更新する**
+- [x] **Step 10: CLAUDE.md と README.md を更新する**
 
 `CLAUDE.md` の「作業の進め方（重要）」の末尾に追加する。
 
@@ -1166,7 +1166,7 @@ npm run manual
 - 失敗したときはアプリのログ `target/manual-app.log` を確認する
 ~~~
 
-- [ ] **Step 11: 全テストを流してコミットし、チェックボックスを更新する**
+- [x] **Step 11: 全テストを流してコミットし、チェックボックスを更新する**
 
 Run: `./mvnw test`
 Expected: PASS
