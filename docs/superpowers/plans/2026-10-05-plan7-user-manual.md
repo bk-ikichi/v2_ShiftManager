@@ -464,7 +464,7 @@ public class HelpController {
 Run: `npm run build`、続けて `./mvnw test -Dtest=HelpTest,HeaderNavTest`
 Expected: PASS（`HeaderNavTest` が既存のヘッダーの動きを壊していないこと）
 
-- [ ] **Step 9: 画面を目で確認する**
+- [x] **Step 9: 画面を目で確認する**
 
 アプリを起動し（`README.md` の「ローカルでの起動」）、スタッフでログインしてスマホ幅とPC幅で `/help` を開く。目次・見出し・リストの見た目が崩れていないこと、ヘッダーに「使い方」があり現在地の色が付くことを確認する（画像はリンク切れでよい）。
 
@@ -702,7 +702,7 @@ Expected: `管理者向けの使い方は管理者だけが表示できる` が 
 Run: `npm run build`、続けて `./mvnw test -Dtest=HelpTest`
 Expected: PASS
 
-- [ ] **Step 5: 画面を目で確認する**
+- [x] **Step 5: 画面を目で確認する**
 
 アプリを起動し、管理者でログインしてPC幅で `/admin/help` を開く。目次のリンク、スタッフ向けへのリンクが動くこと、レイアウトが崩れていないことを確認する（画像はリンク切れでよい）。
 
