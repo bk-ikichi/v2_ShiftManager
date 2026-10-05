@@ -114,7 +114,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jp.bk.shiftmanager.IntegrationTestBase;
@@ -174,12 +173,12 @@ class HelpTest extends IntegrationTestBase {
 }
 ```
 
-- [ ] **Step 2: テストが失敗することを確認する**
+- [x] **Step 2: テストが失敗することを確認する**
 
 Run: `./mvnw test -Dtest=HelpTest`
 Expected: `スタッフ向けの使い方を表示できる` などが FAIL（`/help` が404）
 
-- [ ] **Step 3: Controllerを作る**
+- [x] **Step 3: Controllerを作る**
 
 `src/main/java/jp/bk/shiftmanager/controller/HelpController.java`
 
@@ -206,7 +205,7 @@ public class HelpController {
 }
 ```
 
-- [ ] **Step 4: ヘッダーに「使い方」を足し、印刷時にヘッダーを隠す**
+- [x] **Step 4: ヘッダーに「使い方」を足し、印刷時にヘッダーを隠す**
 
 `src/main/resources/templates/layout.html` の `header` の class に `print:hidden` を足す。
 
@@ -222,7 +221,7 @@ public class HelpController {
         <a th:replace="~{layout :: navLink('/mypage', 'マイページ')}"></a>
 ```
 
-- [ ] **Step 5: ヘルプ本文のスタイルを足す**
+- [x] **Step 5: ヘルプ本文のスタイルを足す**
 
 `src/main/frontend/app.css` の `@layer components { ... }` の中、`.time-grid` の後ろに追加する。
 
@@ -267,7 +266,7 @@ public class HelpController {
   }
 ```
 
-- [ ] **Step 6: 画像の部品を作る**
+- [x] **Step 6: 画像の部品を作る**
 
 `src/main/resources/templates/help/parts.html`
 
@@ -285,7 +284,7 @@ public class HelpController {
 </html>
 ```
 
-- [ ] **Step 7: スタッフ用の本文を作る**
+- [x] **Step 7: スタッフ用の本文を作る**
 
 `src/main/resources/templates/help/staff.html`
 
@@ -460,7 +459,7 @@ public class HelpController {
 </html>
 ```
 
-- [ ] **Step 8: CSSをビルドしてテストを通す**
+- [x] **Step 8: CSSをビルドしてテストを通す**
 
 Run: `npm run build`、続けて `./mvnw test -Dtest=HelpTest,HeaderNavTest`
 Expected: PASS（`HeaderNavTest` が既存のヘッダーの動きを壊していないこと）
@@ -469,7 +468,7 @@ Expected: PASS（`HeaderNavTest` が既存のヘッダーの動きを壊して�
 
 アプリを起動し（`README.md` の「ローカルでの起動」）、スタッフでログインしてスマホ幅とPC幅で `/help` を開く。目次・見出し・リストの見た目が崩れていないこと、ヘッダーに「使い方」があり現在地の色が付くことを確認する（画像はリンク切れでよい）。
 
-- [ ] **Step 10: 全テストを流してコミットし、チェックボックスを更新する**
+- [x] **Step 10: 全テストを流してコミットし、チェックボックスを更新する**
 
 Run: `./mvnw test`
 Expected: PASS
